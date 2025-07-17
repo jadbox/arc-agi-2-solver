@@ -1,0 +1,32 @@
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import { callClaudeCLI } from "./gen_utility_aider.ts";
+
+async function refineResults(): Promise<string> {
+  const result = readFileSync("./working/training_run.txt", "utf-8");
+  const training = readFileSync("./working/training.txt", "utf-8");
+  const solution = readFileSync("./working/solution.ts", "utf-8");
+
+  // Read old code if it exists
+  let old_code = "";
+  const oldCodePath = "./working/solution.ts";
+  if (existsSync(oldCodePath)) {
+    old_code = readFileSync(oldCodePath, "utf-8");
+  }
+
+  let oldResults = "";
+  const oldResultsPath = "./working/training_run.txt";
+  if (existsSync(oldResultsPath)) {
+    oldResults = readFileSync(oldResultsPath, "utf-8");
+  }
+
+  const refined =
+    await callClaudeCLI(`Using the input/out answer key here:\n\n${training}\n\nrefine this program from its last results:\n\n${result}\n
+    and the old code here:\n\n${solution}\n\nPlease refine the solution to better match the input/output requirements. 
+    ${old_code || ""}
+    ${oldResults ? `\n\nResults:\n\n${oldResults}` : ""}
+    `);
+
+  return refined;
+}
+
+refineResults();
