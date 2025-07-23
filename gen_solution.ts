@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 import { $ } from "bun";
-import { makePrompt } from "./gen_utility.ts";
+import { makePrompt } from "./gen_prompt.ts";
 import { writeFileSync } from "fs";
 import path from "path";
+import { callOpenAI } from "./lib/openai";
 
 export async function callClaudeCLI(prompt: string): Promise<string> {
   console.log("🤖 Starting Claude CLI request...");
@@ -64,7 +65,7 @@ export async function main() {
     console.log("✅ Prompt generated successfully.");
 
     // Call Claude CLI with the generated prompt
-    const result = await callClaudeCLI(prompt);
+    const result = await callOpenAI(prompt); // await callClaudeCLI(prompt);
 
     // Extract solution from the result
     let solution = result.split("<SOLUTION>")[1]?.trim();

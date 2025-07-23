@@ -4,18 +4,30 @@ import { $ } from "bun";
 import { writeFileSync, existsSync, mkdirSync } from "fs";
 import path from "path";
 
-async function solution(input: string[]): Promise<string> {
-  return "";
+// Input is a 2D array of SINGLE digit numbers
+function solution(input: number[][]) {
+  return {
+    result: [
+      [1, 1, 1],
+      [2, 2, 2],
+    ],
+    input: input,
+  }; // Example output
 }
 
 try {
-  const solution1 = await solution(["25", "3"]); // use actual INPUT_1 training input data
-  const solution2 = await solution(["84", "33"]); // use actual INPUT_2 training input data
+  const solution1 = await solution([[3], [3]]); // use actual INPUT_1 training input data as single digits
+  const solution2 = await solution([[7], [7]]); // use actual INPUT_2 training input data as single digits
 
   const outputPath = path.join("./working", "training_run.txt");
   writeFileSync(
     outputPath,
-    `Solution 1: ${solution1}\nSolution 2: ${solution2}\n`
+    `<INPUT_1>${JSON.stringify(solution1.input)}\n<OUTPUT_1>\n${JSON.stringify(
+      solution1.result
+    )}
+    \n\n<INPUT_2>${JSON.stringify(
+      solution2.input
+    )}\n<OUTPUT_2>\n${JSON.stringify(solution2.result)}\n`
   );
 
   console.log(`✅ Test complete. Results saved to ${outputPath}`);

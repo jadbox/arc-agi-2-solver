@@ -4,12 +4,14 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "tsx": "^4.20.3"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "groq-sdk": "^0.27.0",
     "openai": "^5.10.0"
   }
 }
