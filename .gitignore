@@ -35,4 +35,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Working directory for generated files
 working
+working.*/*
+working2
 package-lock.json
+./sample.*.json
+sample2.json
+.aider*
