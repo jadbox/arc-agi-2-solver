@@ -42,7 +42,7 @@ export function parseInput(input: string): string[][][] {
 }
 
 export function findGridDividers(grid: string[][][]) {
-  console.log("Finding grid dividers in:", grid);
+  // console.log("Finding grid dividers in:", grid);
   const r = grid.map((g) => _findGridDividers(g));
   if (!r[0]) throw new Error("Error finding grid dividers");
 
