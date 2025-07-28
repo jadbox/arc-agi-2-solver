@@ -15,17 +15,20 @@ if (lastAttemptForSolutionTSFile) {
   lastAttemptForSolutionTS = lastAttemptForSolutionTSFile.trim();
 }
 
-const prompt = `This is a puzzle game where an input grid gets transformed into the output grid. The game has simple secret rules for transformations. Sometimes the grid is separated into a legend key. The secret rules are system rules that are not hard coded to rows/cols, and the solution should not need to specific row/cols to transform. Each digit in the grid could be a number or character- do not use math on the individual digits.
+const prompt = `This is a puzzle game where an input grid gets transformed into the output grid. The game has simple secret rules for transformations. 
+Sometimes the grid is separated into a legend key. The secret rules are system rules that are not hard coded to rows/cols, and the solution should not need to specific row/cols to transform. 
+Each digit in the grid could be a number or letter- do not use math on the individual digits for solving and instead focus on masking and comparison and pattern operations.
 
-1) Create a bullet point list of observations of this specific transformation problem (labeled with detail analysis levels of high [visual clues], med [contextual], low [logical]) and the hidden rules. Do not repeat the data. Be concise. These problems can be solved by using object-like patterns, symmetry, repetition, and abstract perspective ("fill in the holes in each number island").
+1) Create a bullet point list of observations of this specific transformation problem (labeled with detail analysis levels of high [visual clues], med [contextual], low [logical]) of the puzzle. 
+Do not repeat the data. Be concise. These problems can be solved by using object-like patterns, symmetry, repetition, and abstract perspective ("fill in the holes in each number island").
 
 2) After the list of observations, create list of pseudo-code steps that replicates the transformation secret rules. Systematize the process by looking at patterns that are not specific to individual cols/rows. Do not rely on hard-coded solutions.
 
-3) double check pseudo code against a listed example, and propose a final strategy pseudo-code after a <FINAL> tag.
+3) double check pseudo code against a listed example, and propose a final strategy solving proof after a <FINAL> tag that absolutely proves the correct operation to match the output.
 
-a) Note sometimes the puzzles will create "groupify" blocks of numbers as a individual units which may require thinking of blocks of numbers as 'islands with holes' or similar object associations in thinking.
-b) NOTE sometimes there's a grid divider [fixed reference/divider] with critical importance for solving, write a section called <LEGEND> with a visual, deductive analysis of the smaller 'legend' key for solving [example: "legend key indicates all 2x2 blocks are flipped horizontally, and all 1x3 blocks are flipped vertically"].
-
+NOTES:
+a) Sometimes the puzzles will create "group" blocks into simple "shapes" of numbers as a individual units which may require thinking of grid with visual charactoristics ("Grouping A has two holes").
+b) Sometimes there's a grid divider [fixed reference/divider] which then requires the problem to be solved as seperate grids that relate to the solution solving (like "grid A" is masked by 1s in "grid b"). Be sure to write out each grid section. You MUST exclude the divider-line-character itself from the divided grids.
 `;
 
 /*
@@ -49,7 +52,8 @@ export async function solvePuzzle(trainingData: string) {
   let promptWithData = "";
 
   if (parsedData.divider) {
-    promptWithData += `${prompt}\n\nNOTE: grid is seperated by ${parsedData.direction} at indexes ${parsedData.indexes}\n <DATA>\n${trainingData}`;
+    promptWithData += `${prompt}\n\nNOTE: grid is seperated by ${parsedData.direction} at indexes ${parsedData.indexes}\n. 
+    Each col grid is key for solving the puzzle. Divide the grid by the col to look for solutions.\n\n<DATA>\n${trainingData}`;
   } else {
     promptWithData += `${prompt}\n\n<DATA>\n${trainingData}`;
   }

@@ -73,9 +73,13 @@ export async function main() {
     solution = solution?.replace(/<\/SOLUTION>.*$/, "").trim();
 
     // also remove typescript``` .. ``` code
-    solution = solution
-      ?.replace(/```typescript\s*([\s\S]*?)\s*```/g, "$1")
-      .trim();
+    // Extract content between triple backticks with optional "typescript" after them
+    const codeBlockMatch = solution?.match(
+      /```(?:typescript)?\s*([\s\S]*?)\s*```/
+    );
+    if (codeBlockMatch && codeBlockMatch[1]) {
+      solution = codeBlockMatch[1].trim();
+    }
 
     if (solution) {
       const solutionPath = path.join(process.cwd(), "working", "solution.ts");
@@ -89,7 +93,16 @@ export async function main() {
       // Fallback: save the entire response if no solution marker found
       const solutionPath = path.join(process.cwd(), "working", "solution.ts");
       writeFileSync(solutionPath, result);
+
       console.log(`⚠️  Saved full response as fallback to ${solutionPath}`);
+
+      // Run it with bun
+      console.log("🔄 Attempting to run the full response as a script...");
+      await $`bun run ${solutionPath}`.then((x) => {
+        console.log("✅ Fallback script executed successfully with:", x.stdout);
+      });
+
+      console.log("View log: cat working/training_run.txt");
     }
   } catch (error) {
     console.error("💥 Fatal error during solution generation:", error);

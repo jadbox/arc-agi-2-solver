@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
-// file working directory is ./working/
-import { $ } from "bun";
+// CWD is ./working/
 import { writeFileSync, existsSync, mkdirSync } from "fs";
 import path from "path";
 

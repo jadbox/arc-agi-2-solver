@@ -24,13 +24,14 @@ const QWEN_ROUTER_MODELS = {
   Qwen3Coder: "qwen/qwen3-coder",
   Qwen3: "qwen/qwen3-235b-a22b-07-25",
   Qwen3Think: "qwen/qwen3-235b-a22b-thinking-2507",
+  glm: "z-ai/glm-4.5",
 };
 type RouterModelKey = keyof typeof QWEN_ROUTER_MODELS;
 const baseURL = "https://openrouter.ai/api/v1"; // or use your preferred OpenAI API endpoint
 const apiKey = process.env.OPENROUTER_API_KEY;
 const MODEL =
   QWEN_ROUTER_MODELS[process.env.aimodel as RouterModelKey] ||
-  QWEN_ROUTER_MODELS["Qwen3Coder"];
+  QWEN_ROUTER_MODELS["glm"];
 
 if (!MODEL) {
   throw new Error("No model");
@@ -111,8 +112,8 @@ export async function callOpenAIStream(
       model: MODEL,
       messages: [{ role: "user", content: prompt }],
       max_tokens: max_tokens,
-      temperature: 0.1,
-      top_p: 0.8,
+      temperature: 0.6,
+      top_p: 1, // 0.8,
       // repetition_penalty: 1.05,
       stream: true,
       response_format: {
@@ -125,9 +126,24 @@ export async function callOpenAIStream(
 
     console.log("🔄 Streaming response...");
 
+    let isReasoning = false;
     for await (const chunk of stream) {
+      // console.log(`🔄 Received chunk`, chunk.choices[0]);
+      const reasoning = (chunk.choices[0]?.delta as any)?.reasoning || "";
+      if (reasoning) {
+        if (!isReasoning) {
+          isReasoning = true;
+          console.log("🔍 Reasoning started:");
+        }
+        process.stdout.write(reasoning);
+        continue;
+      }
+
       const content = chunk.choices[0]?.delta?.content || "";
       if (content) {
+        if (!fullResponse) {
+          console.log("💬 Final response started:");
+        }
         fullResponse += content;
         process.stdout.write(content); // stream to console
         chunkCount++;
