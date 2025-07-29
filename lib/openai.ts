@@ -15,23 +15,23 @@ const MODEL = "claude-sonnet-4-20250514"; // or use your preferred OpenAI
 */
 
 // gemini
-// const baseURL = "https://generativelanguage.googleapis.com/v1beta/openai/";
-// const MODEL = "gemini-2.5-flash";
-// const apiKey = process.env.GEMINI_API_KEY; // Use OpenAI API key if Gemini key is not set
+const baseURL = "https://generativelanguage.googleapis.com/v1beta/openai/";
+const MODEL = "gemini-2.5-flash";
+const apiKey = process.env.GEMINI_API_KEY; // Use OpenAI API key if Gemini key is not set
 
-const QWEN_ROUTER_MODELS = {
-  K2: "moonshotai/kimi-k2",
-  Qwen3Coder: "qwen/qwen3-coder",
-  Qwen3: "qwen/qwen3-235b-a22b-07-25",
-  Qwen3Think: "qwen/qwen3-235b-a22b-thinking-2507",
-  glm: "z-ai/glm-4.5",
-};
-type RouterModelKey = keyof typeof QWEN_ROUTER_MODELS;
-const baseURL = "https://openrouter.ai/api/v1"; // or use your preferred OpenAI API endpoint
-const apiKey = process.env.OPENROUTER_API_KEY;
-const MODEL =
-  QWEN_ROUTER_MODELS[process.env.aimodel as RouterModelKey] ||
-  QWEN_ROUTER_MODELS["glm"];
+// const QWEN_ROUTER_MODELS = {
+//   K2: "moonshotai/kimi-k2",
+//   Qwen3Coder: "qwen/qwen3-coder",
+//   Qwen3: "qwen/qwen3-235b-a22b-07-25",
+//   Qwen3Think: "qwen/qwen3-235b-a22b-thinking-2507",
+//   glm: "z-ai/glm-4.5",
+// };
+// type RouterModelKey = keyof typeof QWEN_ROUTER_MODELS;
+// const baseURL = "https://openrouter.ai/api/v1"; // or use your preferred OpenAI API endpoint
+// const apiKey = process.env.OPENROUTER_API_KEY;
+// const MODEL =
+//   QWEN_ROUTER_MODELS[process.env.aimodel as RouterModelKey] ||
+//   QWEN_ROUTER_MODELS["glm"];
 
 if (!MODEL) {
   throw new Error("No model");
@@ -112,8 +112,8 @@ export async function callOpenAIStream(
       model: MODEL,
       messages: [{ role: "user", content: prompt }],
       max_tokens: max_tokens,
-      temperature: 0.6,
-      top_p: 1, // 0.8,
+      temperature: 0.1,
+      top_p: 0.5, // 0.8,
       // repetition_penalty: 1.05,
       stream: true,
       response_format: {

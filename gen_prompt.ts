@@ -27,10 +27,10 @@ export async function makePrompt() {
   }
 
   let oldResults = "";
-  const oldResultsPath = "./working/training_run.txt";
-  if (existsSync(oldResultsPath)) {
-    oldResults = readFileSync(oldResultsPath, "utf-8");
-  }
+  // const oldResultsPath = "./working/training_run.txt";
+  // if (existsSync(oldResultsPath)) {
+  //   oldResults = readFileSync(oldResultsPath, "utf-8");
+  // }
 
   const prompt = `
     Based on the following analysis:

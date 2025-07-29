@@ -15,21 +15,35 @@ if (lastAttemptForSolutionTSFile) {
   lastAttemptForSolutionTS = lastAttemptForSolutionTSFile.trim();
 }
 
-const prompt = `This is a puzzle game where an input grid gets transformed into the output grid. The game has simple secret rules for transformations. 
-Sometimes the grid is separated into a legend key. The secret rules are system rules that are not hard coded to rows/cols, and the solution should not need to specific row/cols to transform. 
-Each digit in the grid could be a number or letter- do not use math on the individual digits for solving and instead focus on masking and comparison and pattern operations.
+const prompt = `Here's a concise and improved prompt that addresses the grid separator exclusion issue:
 
-1) Create a bullet point list of observations of this specific transformation problem (labeled with detail analysis levels of high [visual clues], med [contextual], low [logical]) of the puzzle. 
-Do not repeat the data. Be concise. These problems can be solved by using object-like patterns, symmetry, repetition, and abstract perspective ("fill in the holes in each number island").
+<PROMPT>
+This is a puzzle game where an input grid transforms into an output grid using secret rules. The rules are system-based (not hardcoded to rows/cols) and rely on pattern operations (masking, comparison, object-like patterns). Avoid mathematical operations on individual digits.
+Do not repeat the input/output grid data.
+All problems use simple rules and are easy for humans to solve. DO not be verbose.
 
-2) After the list of observations, create list of pseudo-code steps that replicates the transformation secret rules. Systematize the process by looking at patterns that are not specific to individual cols/rows. Do not rely on hard-coded solutions.
+1) BEFORE deeply thinking on solving, Create bullet-point observations of this transformation (labeled: high [visual], med [contextual], low [logical]). Be concise, avoid data repetition. Focus on symmetry, repetition, and abstract patterns (e.g., "fill holes in number islands").
 
-3) double check pseudo code against a listed example, and propose a final strategy solving proof after a <FINAL> tag that absolutely proves the correct operation to match the output.
+2) Think and generate pseudo-code steps for the transformation rules. Systematize using row/col-agnostic patterns. No hardcoded solutions.
+
+3) Verify pseudo-code against examples. After <FINAL>, provide a proof of the correct operation.
 
 NOTES:
-a) Sometimes the puzzles will create "group" blocks into simple "shapes" of numbers as a individual units which may require thinking of grid with visual charactoristics ("Grouping A has two holes").
-b) Sometimes there's a grid divider [fixed reference/divider] which then requires the problem to be solved as seperate grids that relate to the solution solving (like "grid A" is masked by 1s in "grid b"). Be sure to write out each grid section. You MUST exclude the divider-line-character itself from the divided grids.
-`;
+a) Treat digit groups as visual shapes (e.g., "Group A has two holes").
+b) If a grid divider exists (fixed reference character, e.g., '2'):
+   - Remove ALL occurrences of the divider character.
+   - If removed characters formed a contiguous vertical/horizontal line, split the grid into sections along that line.
+   - Otherwise, treat as a single grid.
+   - Exclude the divider character from all sections.
+   - Each sub-grid will be important for the puzzle. (e.g., "Left grid is masked by digit 3 in the right grid").
+</PROMPT>
+
+Key improvements:
+1. Explicitly states to **remove ALL divider characters** first if there's sub-grids.
+2. Clarifies splitting only occurs if removed characters form a **contiguous line**
+3. Emphasizes **exclusion of divider characters** from sections
+4. Maintains conciseness while addressing the core issue
+5. Preserves all original requirements for pattern-based analysis`;
 
 /*
 ${
