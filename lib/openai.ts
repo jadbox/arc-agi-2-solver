@@ -13,30 +13,52 @@ const max_tokens = 16000;
 // const apiKey = process.env.ANTHROPIC_API_KEY;
 // const MODEL = "claude-sonnet-4-20250514"; // or use your preferred OpenAI
 
-// gemini
-const baseURL = "https://generativelanguage.googleapis.com/v1beta/openai/";
-const MODEL = "gemini-2.5-flash";
-const apiKey = process.env.GEMINI_API_KEY; // Use OpenAI API key if Gemini key is not set
+// "https://api.cerebras.ai/v1"
+// const baseURL = "https://api.cerebras.ai/v1"; // or use your preferred OpenAI API endpoint
+// const apiKey = process.env.CEREBRAS_API_KEY; // Use OpenAI API key
+// const MODEL = "qwen-3-235b-a22b";
 
-// const OR_ROUTER_MODELS = {
-//   K2: "moonshotai/kimi-k2", // cant do sample2
-//   Qwen3Coder: "qwen/qwen3-coder",
-//   Qwen3: "qwen/qwen3-235b-a22b-07-25",
-//   Qwen3Think: "qwen/qwen3-235b-a22b-thinking-2507",
-//   glm: "z-ai/glm-4.5",
-//   glm_air: "z-ai/glm-4.5-air",
-//   chatgpt: "openai/chatgpt-4o-latest",
-// };
-// type RouterModelKey = keyof typeof OR_ROUTER_MODELS;
-// const baseURL = "https://openrouter.ai/api/v1"; // or use your preferred OpenAI API endpoint
-// const apiKey = process.env.OPENROUTER_API_KEY;
-// const MODEL =
-//   OR_ROUTER_MODELS[process.env.aimodel as RouterModelKey] ||
-//   OR_ROUTER_MODELS.chatgpt;
+// gemini
+// const baseURL = "https://generativelanguage.googleapis.com/v1beta/openai/";
+// const MODEL = "gemini-2.5-flash";
+// const apiKey = process.env.GEMINI_API_KEY; // Use OpenAI API key if Gemini key is not set
+
+const OR_ROUTER_MODELS = {
+  K2: "moonshotai/kimi-k2", // cant do sample2
+  Qwen3Coder: "qwen/qwen3-coder",
+  Qwen3: "qwen/qwen3-235b-a22b-07-25",
+  Qwen3Think: "qwen/qwen3-235b-a22b-thinking-2507",
+  glm: "z-ai/glm-4.5",
+  glm_air: "z-ai/glm-4.5-air",
+  chatgpt: "openai/chatgpt-4o-latest",
+  Qwen3Nitro: "qwen/qwen3-235b-a22b-2507:nitro",
+};
+type RouterModelKey = keyof typeof OR_ROUTER_MODELS;
+const baseURL = "https://openrouter.ai/api/v1"; // or use your preferred OpenAI API endpoint
+const apiKey = process.env.OPENROUTER_API_KEY;
+const MODEL =
+  OR_ROUTER_MODELS[process.env.aimodel as RouterModelKey] ||
+  OR_ROUTER_MODELS.Qwen3Nitro;
 
 if (!MODEL) {
   throw new Error("No model");
 }
+
+const CEREBRAS_PARAMS = {
+  tempuerature: 0.6, // 0.1
+  top_p: 0.8, // 0.5
+  provider: {
+    only: ["cerebras"], // or "openai" for OpenAI models
+  },
+};
+
+const GEMIN_PARAMS = {
+  tempuerature: 0.1,
+  top_p: 0.5,
+  provider: {
+    only: ["cerebras"], // or "openai" for OpenAI models
+  },
+};
 
 if (!apiKey) {
   throw new Error(
@@ -113,14 +135,17 @@ export async function callOpenAIStream(
       model: MODEL,
       messages: [{ role: "user", content: prompt }],
       max_tokens: max_tokens,
-      temperature: 0.1,
-      top_p: 0.5, // 0.8,
+      temperature: 0.6, // 0.1
+      top_p: 0.8, // 0.5
       // repetition_penalty: 1.05,
       stream: true,
       response_format: {
         type: outputJSON ? "json_object" : "text",
       },
-    });
+      provider: {
+        only: ["cerebras"],
+      },
+    } as any);
 
     let fullResponse = "";
     let chunkCount = 0;
@@ -128,7 +153,7 @@ export async function callOpenAIStream(
     console.log("🔄 Streaming response...");
 
     let isReasoning = false;
-    for await (const chunk of stream) {
+    for await (const chunk of stream as any) {
       // console.log(`🔄 Received chunk`, chunk.choices[0]);
       const reasoning = (chunk.choices[0]?.delta as any)?.reasoning || "";
       if (reasoning) {

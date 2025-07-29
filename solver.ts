@@ -39,15 +39,24 @@ const analysisFile = path.join("working", "analysis.txt");
 // process.exit(0); // Skip analysis step for now
 if (!existsSync(analysisFile)) {
   const trainingFile = path.join("working", "training.txt");
-  await run`./analysis.ts ${trainingFile}`;
+  const analysis = await run`./analysis.ts ${trainingFile}`;
+  if (analysis.exitCode !== 0) {
+    throw new Error(`Analysis failed: ${analysis.stderr}`);
+  }
 } else {
   console.warn(`SKIPPING: Analysis file already exists: ${analysisFile}`);
 }
 // old method const solution = await solvePuzzle(trainingFile);
 
-await run`./gen_solution.ts`;
+const gen_solution = await run`./gen_solution.ts`;
+if (gen_solution.exitCode !== 0) {
+  throw new Error(`Failed to generate solution: ${gen_solution.stderr}`);
+}
 
 const result = await run`bun ./solution_runner.ts`;
+if (result.exitCode !== 0) {
+  throw new Error(`Solution runner failed: ${result.stderr}`);
+}
 console.log("\nFinal result:", result.text().trim());
 
 // readFileSync("./working/training_run.txt", "utf8");

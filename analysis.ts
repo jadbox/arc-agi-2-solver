@@ -76,7 +76,7 @@ export async function solvePuzzle(trainingData: string) {
   const response = await callOpenAI(
     promptWithData,
     false,
-    "working/analysis.txt"
+    path.join("working", "analysis.txt")
   );
   console.log("OpenAI response:", response);
   return response;
