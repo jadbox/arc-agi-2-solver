@@ -47,7 +47,7 @@ if (!existsSync(analysisFile)) {
 
 await run`./gen_solution.ts`;
 
-const result = await run`bun ./working/solution.ts`;
+const result = await run`bun ./solution_runner.ts`;
 console.log("\nFinal result:", result.text().trim());
 
 // readFileSync("./working/training_run.txt", "utf8");

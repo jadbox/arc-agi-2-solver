@@ -9,29 +9,30 @@ const max_tokens = 16000;
 // const apiKey = process.env.DEEPSEEK_API_KEY;
 // const MODEL = "deepseek-chat"; // "deepseek-reasoner",
 
-/* const baseURL = "https://api.anthropic.com/v1/";
-const apiKey = process.env.ANTHROPIC_API_KEY;
-const MODEL = "claude-sonnet-4-20250514"; // or use your preferred OpenAI
-*/
+// const baseURL = "https://api.anthropic.com/v1/";
+// const apiKey = process.env.ANTHROPIC_API_KEY;
+// const MODEL = "claude-sonnet-4-20250514"; // or use your preferred OpenAI
 
 // gemini
 const baseURL = "https://generativelanguage.googleapis.com/v1beta/openai/";
 const MODEL = "gemini-2.5-flash";
 const apiKey = process.env.GEMINI_API_KEY; // Use OpenAI API key if Gemini key is not set
 
-// const QWEN_ROUTER_MODELS = {
-//   K2: "moonshotai/kimi-k2",
+// const OR_ROUTER_MODELS = {
+//   K2: "moonshotai/kimi-k2", // cant do sample2
 //   Qwen3Coder: "qwen/qwen3-coder",
 //   Qwen3: "qwen/qwen3-235b-a22b-07-25",
 //   Qwen3Think: "qwen/qwen3-235b-a22b-thinking-2507",
 //   glm: "z-ai/glm-4.5",
+//   glm_air: "z-ai/glm-4.5-air",
+//   chatgpt: "openai/chatgpt-4o-latest",
 // };
-// type RouterModelKey = keyof typeof QWEN_ROUTER_MODELS;
+// type RouterModelKey = keyof typeof OR_ROUTER_MODELS;
 // const baseURL = "https://openrouter.ai/api/v1"; // or use your preferred OpenAI API endpoint
 // const apiKey = process.env.OPENROUTER_API_KEY;
 // const MODEL =
-//   QWEN_ROUTER_MODELS[process.env.aimodel as RouterModelKey] ||
-//   QWEN_ROUTER_MODELS["glm"];
+//   OR_ROUTER_MODELS[process.env.aimodel as RouterModelKey] ||
+//   OR_ROUTER_MODELS.chatgpt;
 
 if (!MODEL) {
   throw new Error("No model");

@@ -10,7 +10,7 @@ export async function makePrompt() {
     "utf-8"
   );
   const template = readFileSync(
-    path.join(process.cwd(), "working_solution_example.ts"),
+    path.join(process.cwd(), "solution_example.ts"),
     "utf-8"
   );
 
@@ -22,9 +22,9 @@ export async function makePrompt() {
   // Read old code if it exists
   let old_code = "";
   const oldCodePath = "./working/solution.ts";
-  if (existsSync(oldCodePath)) {
-    old_code = readFileSync(oldCodePath, "utf-8");
-  }
+  // if (existsSync(oldCodePath)) {
+  //   old_code = readFileSync(oldCodePath, "utf-8");
+  // }
 
   let oldResults = "";
   // const oldResultsPath = "./working/training_run.txt";
