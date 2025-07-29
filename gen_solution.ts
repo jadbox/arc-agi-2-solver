@@ -98,8 +98,12 @@ export async function main() {
 
       // Run it with bun
       console.log("🔄 Attempting to run the full response as a script...");
-      await $`bun run ${solutionPath}`.then((x) => {
-        console.log("✅ Fallback script executed successfully with:", x.stdout);
+      await $`bun run ${solutionPath}`.then(async (x) => {
+        console.log("✅ Script executed successfully with output:", x.stdout);
+        // run cat working/training_run.txt
+        await $`cat working/training_run.txt`.then((y) => {
+          console.log("📄 training_run.txt output:", y.stdout);
+        });
       });
 
       console.log("View log: cat working/training_run.txt");
