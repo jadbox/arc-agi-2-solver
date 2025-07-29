@@ -30,12 +30,12 @@ async function generateAsciiMap() {
   try {
     // Clear and create working directory
     const workingDirPath = path.join(process.cwd(), workingDir);
-    if (existsSync(workingDirPath)) {
-      rmSync(workingDirPath, { recursive: true, force: true });
-      console.log(`Cleared existing ${workingDir}/ directory`);
-    }
+    // if (existsSync(workingDirPath)) {
+    //   rmSync(workingDirPath, { recursive: true, force: true });
+    //   console.log(`Cleared existing ${workingDir}/ directory`);
+    // }
     mkdirSync(workingDirPath, { recursive: true });
-    console.log(`Created ${workingDir}/ directory`);
+    // console.log(`Created ${workingDir}/ directory`);
 
     // Construct the full path to the input file
     const inputFilePath = path.join(process.cwd(), inputFileName);

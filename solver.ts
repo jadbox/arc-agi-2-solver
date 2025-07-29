@@ -2,8 +2,9 @@
 import { $, file } from "bun";
 import * as aider_ver from "./aider_ver.js";
 import { solvePuzzle } from "./analysis.js";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { stdin } from "process";
+import path from "path";
 
 await aider_ver.check();
 // Run the ASCII map generation script with a sample input file to populuate working directory
@@ -27,8 +28,21 @@ console.log(`Generating ASCII map from ${argFile}...`);
 
 await run`bun ./asciimap.js ${argFile}`;
 
-const trainingFile = "working/training.txt";
-await run`./analysis.ts ${trainingFile}`;
+// copy argFile to working/sample.json
+const sampleFilePath = path.join("working", "sample.json"); // copy of the problem in working/
+await run`cp ${argFile} ${sampleFilePath.toString()}`;
+
+// skip this step of analysis.txt exists in ./working/
+const analysisFile = path.join("working", "analysis.txt");
+// console.log(`Analysis file path: ${analysisFile}`);
+// console.log(`Checking if analysis file exists...`, existsSync(analysisFile));
+// process.exit(0); // Skip analysis step for now
+if (!existsSync(analysisFile)) {
+  const trainingFile = path.join("working", "training.txt");
+  await run`./analysis.ts ${trainingFile}`;
+} else {
+  console.warn(`SKIPPING: Analysis file already exists: ${analysisFile}`);
+}
 // old method const solution = await solvePuzzle(trainingFile);
 
 await run`./gen_solution.ts`;
