@@ -35,6 +35,16 @@ export async function main() {
     }
 
     if (solution) {
+      // Remove any problematic 'ts' imports that might be generated
+      solution = solution.replace(
+        /import \* as ts from "typescript";?\n?/g,
+        ""
+      );
+      solution = solution.replace(
+        /import {.*?}\s*from\s*"typescript";?\n?/g,
+        ""
+      );
+
       const solutionPath = path.join(process.cwd(), workingDir, "solution.ts");
       writeFileSync(solutionPath, solution);
       console.log(`✅ Solution generated and saved to ${solutionPath}`);

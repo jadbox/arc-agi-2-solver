@@ -34,6 +34,18 @@ console.log(`Created working directory: ${workingDir}`);
 
 console.log(`Generating ASCII map from ${argFile}...`);
 
+const endFile = path.join(workingDir, "solution_output.json");
+if (existsSync(endFile)) {
+  const passed = JSON.parse(readFileSync(endFile, "utf8")).allPassed;
+  if (passed) {
+    console.log(`!! Solution already exists and passed: ${endFile}`);
+    console.log("You can delete the working directory to regenerate.");
+    process.exit(0);
+  }
+  console.warn(`!! Solution file already exists and failed: ${endFile}`);
+  process.exit(0);
+}
+
 await run`bun ./asciimap.js ${argFile} ${workingDir}`;
 
 // copy argFile to working/sample.json
@@ -42,9 +54,6 @@ await run`cp ${argFile} ${sampleFilePath.toString()}`;
 
 // skip this step of analysis.txt exists in ./working/
 const analysisFile = path.join(workingDir, "analysis.txt");
-// console.log(`Analysis file path: ${analysisFile}`);
-// console.log(`Checking if analysis file exists...`, existsSync(analysisFile));
-// process.exit(0); // Skip analysis step for now
 if (!existsSync(analysisFile)) {
   const trainingFile = path.join(workingDir, "training.txt");
   const analysis = await run`./analysis.ts ${trainingFile} ${workingDir}`;

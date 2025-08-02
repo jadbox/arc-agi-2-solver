@@ -101,8 +101,8 @@ async function generateAsciiMap() {
     const testFilePath = path.join(workingDirPath, testFileName);
 
     writeFileSync(trainingFilePath, trainingContent, "utf8");
-    writeFileSync(solutionFilePath, solutionContent, "utf8");
-    writeFileSync(testFilePath, testContent, "utf8");
+    // writeFileSync(solutionFilePath, solutionContent, "utf8");
+    // writeFileSync(testFilePath, testContent, "utf8");
 
     console.log(`Successfully generated three files from ${inputFileName}:`);
     console.log(`- ${workingDir}/${trainingFileName}: Training data only`);

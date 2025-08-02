@@ -10,8 +10,10 @@ This project employs two main strategies:
 
 To solve a puzzle, run the `solver.js` script from your terminal. You need to provide a sample JSON file containing the puzzle data.
 
+Step 1: copy the /data/ directory from ARC-PRIZE-02 into the root of this project.
+
 ```bash
-bun run solver.js
+bun run solver.js data/evaluation.txt
 ```
 
 The script will then:
