@@ -62,7 +62,9 @@ async function runSolver(
 async function main() {
   const evaluationFilePath = path.join("data", "evaluation.txt");
   if (!existsSync(evaluationFilePath)) {
-    console.error(`Error: ${evaluationFilePath} not found.`);
+    console.error(
+      `Error: ${evaluationFilePath} not found. Please be sure to clone ARC-AGI-2's data folder here.`
+    );
     process.exit(1);
   }
 

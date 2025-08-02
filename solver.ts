@@ -36,14 +36,28 @@ console.log(`Generating ASCII map from ${argFile}...`);
 
 const endFile = path.join(workingDir, "solution_output.json");
 if (existsSync(endFile)) {
-  const passed = JSON.parse(readFileSync(endFile, "utf8")).allPassed;
-  if (passed) {
+  const output = JSON.parse(readFileSync(endFile, "utf8"));
+  const passed = output.passed;
+
+  if (!passed) {
+    const hasNoTests =
+      output.test &&
+      output.test.solutions &&
+      output.test.solutions.length === 0;
+
+    if (hasNoTests) {
+      console.warn(
+        `!! No tests found in ${endFile}. Please ensure your sample JSON has 'test' data.`
+      );
+    } else {
+      console.warn(`!! Solution file already exists but failed: ${endFile}`);
+      process.exit(1);
+    }
+  } else {
     console.log(`!! Solution already exists and passed: ${endFile}`);
     console.log("You can delete the working directory to regenerate.");
     process.exit(0);
   }
-  console.warn(`!! Solution file already exists and failed: ${endFile}`);
-  process.exit(0);
 }
 
 await run`bun ./asciimap.js ${argFile} ${workingDir}`;
@@ -65,11 +79,19 @@ if (!existsSync(analysisFile)) {
 }
 // old method const solution = await solvePuzzle(trainingFile);
 
-const gen_solution = await run`./gen_solution.ts ${workingDir}`;
-if (gen_solution.exitCode !== 0) {
-  throw new Error(`Failed to generate solution: ${gen_solution.stderr}`);
+const solutionFile = path.join(workingDir, "solution.ts");
+if (!existsSync(solutionFile)) {
+  const gen_solution = await run`./gen_solution.ts ${workingDir}`;
+  if (gen_solution.exitCode !== 0) {
+    throw new Error(`Failed to generate solution: ${gen_solution.stderr}`);
+    process.exit(1);
+  }
+} else {
+  console.warn(`SKIPPING: Solution file already exists: ${solutionFile}`);
 }
 
+// Run the solution runner to test the solution
+console.log("Running solution runner...");
 const result = await run`bun ./solution_runner.ts ${workingDir}`;
 if (result.exitCode !== 0) {
   throw new Error(`Solution runner failed: ${result.stderr}`);
