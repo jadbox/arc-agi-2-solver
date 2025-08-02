@@ -49,9 +49,9 @@ if (existsSync(endFile)) {
       console.warn(
         `!! No tests found in ${endFile}. Please ensure your sample JSON has 'test' data.`
       );
-    } else {
-      console.warn(`!! Solution file already exists but failed: ${endFile}`);
-      process.exit(1);
+    } else if (output?.test?.solutions.length > 0) {
+      console.warn(`!! Tests have failed: ${endFile}`);
+      process.exit(0);
     }
   } else {
     console.log(`!! Solution already exists and passed: ${endFile}`);

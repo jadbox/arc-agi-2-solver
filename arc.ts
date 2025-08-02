@@ -14,6 +14,7 @@ interface ArcResults {
 const ARC_RESULTS_FILE = path.join("working", "arc_results.json");
 
 // Function to load existing results or initialize new ones
+// WIP - LETS ALWAYS START FRESH FOR TESTING
 function loadArcResults(): ArcResults {
   if (existsSync(ARC_RESULTS_FILE)) {
     try {
