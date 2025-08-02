@@ -9,11 +9,12 @@ import { parseInput, findGridDividers } from "./lib/divide";
 
 let lastAttemptForSolutionTS = "";
 // Helper function to read file synchronously
-const _f = path.join(import.meta.dirname, "working", "solution.ts");
-const lastAttemptForSolutionTSFile = existsSync(_f) && readFileSync(_f, "utf8");
-if (lastAttemptForSolutionTSFile) {
-  lastAttemptForSolutionTS = lastAttemptForSolutionTSFile.trim();
-}
+// The working directory will now be passed as an argument
+// const _f = path.join(import.meta.dirname, "working", "solution.ts");
+// const lastAttemptForSolutionTSFile = existsSync(_f) && readFileSync(_f, "utf8");
+// if (lastAttemptForSolutionTSFile) {
+//   lastAttemptForSolutionTS = lastAttemptForSolutionTSFile.trim();
+// }
 
 const prompt = `Here's a concise and improved prompt that addresses the grid separator exclusion issue:
 
@@ -58,7 +59,7 @@ IGNORE ME: LAST STEP: provide a list of common utilities needed for the solution
 )
 */
 
-export async function solvePuzzle(trainingData: string) {
+export async function solvePuzzle(trainingData: string, workingDir: string) {
   console.log("Parsing input data...");
   const parsedData = findGridDividers(parseInput(trainingData));
   // console.log("Parsed data:", parsedData);
@@ -76,7 +77,7 @@ export async function solvePuzzle(trainingData: string) {
   const response = await callOpenAI(
     promptWithData,
     false,
-    path.join("working", "analysis.txt")
+    path.join(workingDir, "analysis.txt")
   );
   console.log("OpenAI response:", response);
   return response;
@@ -99,11 +100,12 @@ if (import.meta.main) {
 
   // Determine the input file name: use the first argument if provided, otherwise use the default.
   const inputFileName = args[0] || "working/training.txt";
+  const workingDir = args[1] || "working"; // Get working directory from arguments
 
   const readFileSync = (await import("fs")).readFileSync;
   const trainingData = readFileSync(inputFileName, "utf8");
 
-  solvePuzzle(trainingData).catch(console.error);
+  solvePuzzle(trainingData, workingDir).catch(console.error);
 }
 
 function run(cmd: string) {

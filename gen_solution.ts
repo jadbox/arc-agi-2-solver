@@ -1,17 +1,20 @@
 #!/usr/bin/env bun
 import { $ } from "bun";
 import { makePrompt } from "./gen_prompt.ts";
-import { writeFileSync } from "fs";
+import { writeFileSync, readFileSync, existsSync } from "fs";
 import path from "path";
 import { callOpenAI } from "./lib/openai";
 
 export async function main() {
-  console.log("🚀 Starting solution generation with Claude CLI...");
+  const args = process.argv.slice(2);
+  const workingDir = args[0] || "working"; // Get working directory from arguments
+
+  console.log(`🚀 Starting solution generation for ${workingDir}...`);
 
   try {
     // Generate prompt using the makePrompt function from gen_utility.ts
     console.log("📝 Generating prompt from analysis...");
-    const prompt = await makePrompt();
+    const prompt = await makePrompt(workingDir);
     console.log("✅ Prompt generated successfully.");
 
     // Call Claude CLI with the generated prompt
@@ -32,7 +35,7 @@ export async function main() {
     }
 
     if (solution) {
-      const solutionPath = path.join(process.cwd(), "working", "solution.ts");
+      const solutionPath = path.join(process.cwd(), workingDir, "solution.ts");
       writeFileSync(solutionPath, solution);
       console.log(`✅ Solution generated and saved to ${solutionPath}`);
       console.log("🎉 Process completed successfully!");
@@ -41,14 +44,14 @@ export async function main() {
       console.log("📄 Full response:", result);
 
       // Fallback: save the entire response if no solution marker found
-      // const solutionPath = path.join(process.cwd(), "working", "solution.ts");
+      // const solutionPath = path.join(process.cwd(), workingDir, "solution.ts");
       // writeFileSync(solutionPath, result);
 
       // console.log(`⚠️  Saved full response as fallback to ${solutionPath}`);
 
       // Run it with bun
       console.log("🔄 Attempting to run the full response as a script...");
-      await $`bun solution_runner.ts`.then(async (x) => {
+      await $`bun solution_runner.ts ${workingDir}`.then(async (x) => {
         console.log("✅ Script executed successfully with output:", x.stdout);
         // run cat working/training_run.txt
         // await $`cat working/training_run.txt`.then((y) => {
@@ -56,7 +59,7 @@ export async function main() {
         // });
       });
 
-      console.log("View log: cat working/training_run.txt");
+      console.log(`View log: cat ${workingDir}/training_run.txt`);
     }
   } catch (error) {
     console.error("💥 Fatal error during solution generation:", error);

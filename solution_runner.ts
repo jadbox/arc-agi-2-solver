@@ -1,11 +1,18 @@
 #!/usr/bin/env bun
 import { writeFileSync, existsSync, mkdirSync, readFileSync } from "fs";
 import path from "path";
-import { solution } from "./working/solution.ts"; // Import the solution function
 
 // First half of file comes from working_solution_example.ts
 // This is static test setup, do not modify for problem solving
-const sample = readFileSync(path.join("./working", "sample.json"), "utf8");
+
+const args = process.argv.slice(2);
+const workingDir = args[0] || "working"; // Get working directory from arguments
+
+// Dynamically import the solution from the specified working directory
+const solutionModulePath = path.join(process.cwd(), workingDir, "solution.ts");
+const { solution } = await import(solutionModulePath);
+
+const sample = readFileSync(path.join(workingDir, "sample.json"), "utf8");
 const parsedSample = JSON.parse(sample);
 if (
   !parsedSample?.train ||
@@ -27,7 +34,7 @@ for (const item of parsedSample.train) {
   solutions.push({ ..._solution, passed, answer: item.output });
 }
 
-const outputPath = path.join("./working", "solution_output.json");
+const outputPath = path.join(workingDir, "solution_output.json");
 const allPassed = solutions.every((s) => s.passed);
 const outData = JSON.stringify({ allPassed, solutions }); // , null, 2
 writeFileSync(outputPath, outData);
