@@ -14,31 +14,31 @@ const max_tokens = 16000;
 // const MODEL = "claude-sonnet-4-20250514"; // or use your preferred OpenAI
 
 // "https://api.cerebras.ai/v1"
-// const baseURL = "https://api.cerebras.ai/v1"; // or use your preferred OpenAI API endpoint
-// const apiKey = process.env.CEREBRAS_API_KEY; // Use OpenAI API key
-// const MODEL = "qwen-3-235b-a22b";
+const baseURL = "https://api.cerebras.ai/v1"; // or use your preferred OpenAI API endpoint
+const apiKey = process.env.CEREBRAS_API_KEY; // Use OpenAI API key
+const MODEL = "qwen-3-235b-a22b-instruct-2507"; //"qwen-3-235b-a22b"; // qwen-3-235b-a22b-thinking-2507
 
 // gemini
 // const baseURL = "https://generativelanguage.googleapis.com/v1beta/openai/";
 // const MODEL = "gemini-2.5-flash";
 // const apiKey = process.env.GEMINI_API_KEY; // Use OpenAI API key if Gemini key is not set
 
-const OR_ROUTER_MODELS = {
-  K2: "moonshotai/kimi-k2", // cant do sample2
-  Qwen3Coder: "qwen/qwen3-coder",
-  Qwen3: "qwen/qwen3-235b-a22b-07-25",
-  Qwen3Think: "qwen/qwen3-235b-a22b-thinking-2507",
-  glm: "z-ai/glm-4.5",
-  glm_air: "z-ai/glm-4.5-air",
-  chatgpt: "openai/chatgpt-4o-latest",
-  Qwen3Nitro: "qwen/qwen3-235b-a22b-2507:nitro",
-};
-type RouterModelKey = keyof typeof OR_ROUTER_MODELS;
-const baseURL = "https://openrouter.ai/api/v1"; // or use your preferred OpenAI API endpoint
-const apiKey = process.env.OPENROUTER_API_KEY;
-const MODEL =
-  OR_ROUTER_MODELS[process.env.aimodel as RouterModelKey] ||
-  OR_ROUTER_MODELS.Qwen3Nitro;
+// const OR_ROUTER_MODELS = {
+//   K2: "moonshotai/kimi-k2", // cant do sample2
+//   Qwen3Coder: "qwen/qwen3-coder",
+//   Qwen3: "qwen/qwen3-235b-a22b-07-25",
+//   Qwen3Think: "qwen/qwen3-235b-a22b-thinking-2507:nitro",
+//   glm: "z-ai/glm-4.5",
+//   glm_air: "z-ai/glm-4.5-air",
+//   chatgpt: "openai/chatgpt-4o-latest",
+//   Qwen3Nitro: "qwen/qwen3-235b-a22b-2507:nitro",
+// };
+// type RouterModelKey = keyof typeof OR_ROUTER_MODELS;
+// const baseURL = "https://openrouter.ai/api/v1"; // or use your preferred OpenAI API endpoint
+// const apiKey = process.env.OPENROUTER_API_KEY;
+// const MODEL =
+//   OR_ROUTER_MODELS[process.env.aimodel as RouterModelKey] ||
+//   OR_ROUTER_MODELS.Qwen3Think;
 
 if (!MODEL) {
   throw new Error("No model");
@@ -55,9 +55,6 @@ const CEREBRAS_PARAMS = {
 const GEMIN_PARAMS = {
   tempuerature: 0.1,
   top_p: 0.5,
-  provider: {
-    only: ["cerebras"], // or "openai" for OpenAI models
-  },
 };
 
 if (!apiKey) {
@@ -79,48 +76,48 @@ export async function callOpenAI(
 }
 
 // Helper function to call openai with prompt and return response
-export async function callOpenAISync(
-  prompt: string,
-  outputJSON: boolean = false,
-  outputFilePath: string = ""
-) {
-  console.log(`🤖 Starting OpenAI request with ${MODEL} at ${baseURL}...`);
+// export async function callOpenAISync(
+//   prompt: string,
+//   outputJSON: boolean = false,
+//   outputFilePath: string = ""
+// ) {
+//   console.log(`🤖 Starting OpenAI request with ${MODEL} at ${baseURL}...`);
 
-  try {
-    const response = await client.chat.completions.create({
-      model: MODEL,
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: max_tokens,
-      temperature: 0.7,
-      top_p: 0.8,
-      // repetition_penalty: 1.05,
-      // response_format: {
-      //   type: outputJSON ? "json_object" : "text",
-      // },
-    });
+//   try {
+//     const response = await client.chat.completions.create({
+//       model: MODEL,
+//       messages: [{ role: "user", content: prompt }],
+//       max_tokens: max_tokens,
+//       temperature: 0.7,
+//       top_p: 0.8,
+//       // repetition_penalty: 1.05,
+//       // response_format: {
+//       //   type: outputJSON ? "json_object" : "text",
+//       // },
+//     });
 
-    const fullResponse = response.choices[0]?.message?.content;
+//     const fullResponse = response.choices[0]?.message?.content;
 
-    if (!fullResponse) {
-      console.warn("Response:", response);
-      throw new Error("No response received from OpenAI.");
-    }
+//     if (!fullResponse) {
+//       console.warn("Response:", response);
+//       throw new Error("No response received from OpenAI.");
+//     }
 
-    const trimmedResponse = fullResponse.trim();
+//     const trimmedResponse = fullResponse.trim();
 
-    console.log(`✅ Response received (${trimmedResponse.length} characters)`);
+//     console.log(`✅ Response received (${trimmedResponse.length} characters)`);
 
-    if (outputFilePath) {
-      writeFileSync(outputFilePath, trimmedResponse, "utf8");
-      console.log(`✅ Output written to ${outputFilePath}`);
-    }
+//     if (outputFilePath) {
+//       writeFileSync(outputFilePath, trimmedResponse, "utf8");
+//       console.log(`✅ Output written to ${outputFilePath}`);
+//     }
 
-    return trimmedResponse;
-  } catch (error) {
-    console.error("❌ Error calling OpenAI:", error);
-    throw error;
-  }
-}
+//     return trimmedResponse;
+//   } catch (error) {
+//     console.error("❌ Error calling OpenAI:", error);
+//     throw error;
+//   }
+// }
 
 // Helper function to call openai with prompt and return response
 export async function callOpenAIStream(
@@ -135,16 +132,18 @@ export async function callOpenAIStream(
       model: MODEL,
       messages: [{ role: "user", content: prompt }],
       max_tokens: max_tokens,
-      temperature: 0.6, // 0.1
-      top_p: 0.8, // 0.5
+      temperature: 0.7, // 0.6, // 0.1
+      top_p: 0.8, // 0.8, // 0.5
+      // min_p: 0,
+      // top_k: 20,
       // repetition_penalty: 1.05,
       stream: true,
       response_format: {
         type: outputJSON ? "json_object" : "text",
       },
-      provider: {
-        only: ["cerebras"],
-      },
+      // provider: {
+      //   only: ["cerebras"],
+      // },
     } as any);
 
     let fullResponse = "";
