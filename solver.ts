@@ -76,7 +76,8 @@ await $`cp ${argFile} ${sampleFilePath.toString()}`;
 
 // skip this step of analysis.txt exists in ./working/
 const analysisFile = path.join(workingDir, "analysis.txt");
-if (!existsSync(analysisFile)) {
+let analysisExists = existsSync(analysisFile);
+if (!analysisExists) {
   const trainingFile = path.join(workingDir, "training.txt");
   const analysis = await $`./analysis.ts ${trainingFile} ${workingDir}`;
   if (analysis.exitCode !== 0) {
@@ -88,7 +89,8 @@ if (!existsSync(analysisFile)) {
 // old method const solution = await solvePuzzle(trainingFile);
 
 const solutionFile = path.join(workingDir, "solution.ts");
-if (!existsSync(solutionFile)) {
+// Gen solution is only needed if solution.ts does not exist or analysis.txt did not exist
+if (!analysisExists || !existsSync(solutionFile)) {
   const gen_solution = await $.nothrow()`./gen_solution.ts ${workingDir}`;
   if (gen_solution.exitCode !== 0) {
     console.error(`Failed to generate solution: ${gen_solution.stderr}`);
@@ -101,13 +103,16 @@ if (!existsSync(solutionFile)) {
 // Run the solution runner to test the solution
 console.log("Running solution runner...");
 var result = await $.nothrow()`bun ./solution_runner.ts ${workingDir}`;
-console.log("Finished running: bun ./solution_runner.ts", result.exitCode);
+console.log(
+  "Finished running: bun ./solution_runner.ts exit_code:" + result.exitCode
+);
 if (result.exitCode === 2 || result.exitCode === 3) {
-  console.log("> ", result.stderr);
+  // convert error into string
+  // console.log("Did not pass: "); //, result.stderr.toString()
   process.exit(result.exitCode); // Exit if training or test solutions failed
   // Either training or test solutions failed, just move on
 } else if (result.exitCode !== 0) {
-  console.error(`Solution runner failed: ${result.stderr}`);
+  console.error(`Solution runner failed: ${result.stderr.toString()}`);
   process.exit(result.exitCode);
 }
 console.log("\nFinal result:", result.text().trim());

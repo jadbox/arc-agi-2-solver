@@ -8,7 +8,11 @@ export async function makePrompt(workingDir: string = "working") {
   const analysis = readFileSync(
     path.join(process.cwd(), workingDir, "analysis.txt"),
     "utf-8"
-  );
+  ).split("FINAL>")[1];
+  if (!analysis) {
+    throw new Error("No analysis found in analysis.txt");
+  }
+
   const template = readFileSync(
     path.join(process.cwd(), "solution_example.ts"),
     "utf-8"
