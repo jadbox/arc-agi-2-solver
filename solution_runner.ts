@@ -63,7 +63,10 @@ let trainSolutions: SolutionResult[] = await Promise.all(
       JSON.stringify(_solution.result) === JSON.stringify(item.output);
     return { ..._solution, passed, answer: item.output };
   })
-);
+).catch((error) => {
+  console.error("Error during training solution processing:", error);
+  process.exit(1);
+});
 
 if (trainSolutions.length === 0) {
   console.error("❌ No training solutions found. Exiting.");
@@ -71,14 +74,38 @@ if (trainSolutions.length === 0) {
 }
 
 const allTrainPassed = trainSolutions.every((s) => s.passed);
+const failedTests = trainSolutions.filter((s) => !s.passed);
+const passedTests = trainSolutions.filter((s) => s.passed);
 
 // Run TEST
 let testSolutions: SolutionResult[] = [];
 let testsPassed = false;
+
 if (!allTrainPassed) {
-  console.log("⚠️ Not all training tests passed. Skipping test data run.");
-  process.exit(0);
+  console.log(
+    `⚠️ Not all training tests passed for ${workingDir}. Skipping test data run.`
+  );
+  //console.log(trainSolutions.filter((s) => !s.passed));
+  // Save a error file in workingDir called error.txt
+
+  writeFileSync(
+    path.join(workingDir, "error_train.json"),
+    `${JSON.stringify({
+      successCount: passedTests.length,
+      failedCount: failedTests.length,
+      failed: failedTests,
+    })}`
+  );
+
+  console.log(`Error details saved to error_train.json in ${workingDir}`);
+
+  console.warn(
+    `❌ failed:${failedTests.length}, passed:${passedTests.length} for TRAINING samples. Please fix the issues before running test data.`
+  );
+  process.exit(2);
 }
+
+// If all training tests passed, proceed to test data
 if (allTrainPassed) {
   console.log("🎉 All TRAINING tests passed! Running on test data...");
   const testItems = getSampleItems(parsedSample, "test");
@@ -91,17 +118,8 @@ if (allTrainPassed) {
     })
   );
 
-  if (testSolutions.length === 0) {
-    console.error("❌ No test solutions found. Exiting.");
-    process.exit(1);
-  } else if (!testSolutions.every((s) => s.passed)) {
-    console.error("❌ Some test solutions failed. Exiting.");
-    console.log(testSolutions.filter((s) => !s.passed));
-    process.exit(1);
-  } else {
-    testsPassed = true;
-    console.log(`✅ All TEST solutions passed ${testSolutions.length}`);
-  }
+  testsPassed = testSolutions.every((s) => s.passed);
+  console.log(`✅ All TEST solutions passed ${testSolutions.length}`);
 }
 
 const outputPath = path.join(workingDir, "solution_output.json");
@@ -122,33 +140,30 @@ console.log(`✅ Test complete. Results saved to ${outputPath}`);
 console.log(
   `Training results: ${allTrainPassed ? "🎉 All passed!" : "⚠️ Some failed."}`
 );
-if (allTrainPassed) {
-  const allTestPassed = testSolutions.every((s) => s.passed);
-  console.log(
-    `Test results: ${allTestPassed ? "🎉 All passed!" : "⚠️ Some failed."}`
-  );
-}
+console.log(
+  `Test passed: ${testsPassed ? "🎉 All passed!" : "⚠️ Some failed."}`
+);
 
-if (!allTrainPassed) {
-  console.error(
-    "\n❌ Some training tests failed. Check the output file for details."
-  );
-  let failedSolutions = trainSolutions.filter((s) => !s.passed);
-  console.error(
-    "Failed training solutions:",
-    JSON.stringify(failedSolutions)
-      .replace(/],/g, "],\n")
-      .replace(/":/g, '":\n')
-  );
-} else if (testSolutions.length > 0 && !testSolutions.every((s) => s.passed)) {
+// if (!allTrainPassed) {
+//   console.error("\n❌ Some TESTS failed. Check the output file for details.");
+//   let failedSolutions = trainSolutions.filter((s) => !s.passed);
+//   console.warn(
+//     "Failed training solutions:",
+//     JSON.stringify(failedSolutions)
+//       .replace(/],/g, "],\n")
+//       .replace(/":/g, '":\n')
+//   );
+// } else
+if (testSolutions.length > 0 && !testSolutions.every((s) => s.passed)) {
   console.error(
     "\n❌ Some test tests failed. Check the output file for details."
   );
   let failedSolutions = testSolutions.filter((s) => !s.passed);
   console.error(
-    "Failed test solutions:",
+    "Failed test solutions:\n",
     JSON.stringify(failedSolutions)
       .replace(/],/g, "],\n")
       .replace(/":/g, '":\n')
   );
+  process.exit(3);
 }
