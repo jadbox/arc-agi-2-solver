@@ -4,6 +4,7 @@ import { callOpenAI } from "./lib/openai";
 import { existsSync, readFileSync } from "fs";
 import path from "path";
 import { parseInput, findGridDividers } from "./lib/divide";
+import { transpile } from "typescript";
 
 // import { promptGroq } from "./lib/groq";
 
@@ -44,8 +45,9 @@ Key improvements:
 2. Clarifies splitting only occurs if removed characters form a **contiguous line**
 3. Emphasizes **exclusion of divider characters** from sections
 4. Maintains conciseness while addressing the core issue
-5. Preserves all original requirements for pattern-based analysis`;
-
+5. Preserves all original requirements for pattern-based analysis
+6. Do not overfit solution to specific examples, focus on generalizable patterns. Minimize hardcoded locations.
+7. Avoid carefully crafted infinite loops or infinite recursions.`;
 /*
 ${
   lastAttemptForSolutionTSFile
@@ -74,11 +76,9 @@ export async function solvePuzzle(trainingData: string, workingDir: string) {
   }
 
   console.log("Calling OpenAI with prompt:", promptWithData);
-  const response = await callOpenAI(
-    promptWithData,
-    false,
-    path.join(workingDir, "analysis.txt")
-  );
+  const response = await callOpenAI(promptWithData, {
+    outputFilePath: path.join(workingDir, "analysis.txt"),
+  });
   console.log("OpenAI response:", response);
   return response;
 

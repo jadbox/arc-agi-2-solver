@@ -80,7 +80,7 @@ export async function main() {
     console.log("✅ Prompt generated successfully.");
 
     // Call OpenAI with the generated prompt
-    const rawResponse = await callOpenAI(prompt);
+    const rawResponse = await callOpenAI(prompt, { code: true });
 
     // Extract and clean the solution
     let solution = extractSolution(rawResponse);
