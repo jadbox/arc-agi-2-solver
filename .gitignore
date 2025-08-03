@@ -39,3 +39,4 @@ working*
 package-lock.json
 sample*.json
 .aider*
+data

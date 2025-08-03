@@ -97,8 +97,8 @@ async function generateAsciiMap() {
 
     // Write all three files to working directory
     const trainingFilePath = path.join(workingDirPath, trainingFileName);
-    const solutionFilePath = path.join(workingDirPath, solutionFileName);
-    const testFilePath = path.join(workingDirPath, testFileName);
+    // const solutionFilePath = path.join(workingDirPath, solutionFileName);
+    // const testFilePath = path.join(workingDirPath, testFileName);
 
     writeFileSync(trainingFilePath, trainingContent, "utf8");
     // writeFileSync(solutionFilePath, solutionContent, "utf8");
@@ -106,8 +106,8 @@ async function generateAsciiMap() {
 
     console.log(`Successfully generated three files from ${inputFileName}:`);
     console.log(`- ${workingDir}/${trainingFileName}: Training data only`);
-    console.log(`- ${workingDir}/${solutionFileName}: Test input/output pairs`);
-    console.log(`- ${workingDir}/${testFileName}: Test inputs only`);
+    // console.log(`- ${workingDir}/${solutionFileName}: Test input/output pairs`);
+    // console.log(`- ${workingDir}/${testFileName}: Test inputs only`);
   } catch (error) {
     console.error(`Error generating ASCII map: ${error.message}`);
     // Provide more specific error messages for common issues

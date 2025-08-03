@@ -107,8 +107,3 @@ if (import.meta.main) {
 
   solvePuzzle(trainingData, workingDir).catch(console.error);
 }
-
-function run(cmd: string) {
-  console.log(`Running command: ${cmd}`);
-  return $`${cmd}`;
-}

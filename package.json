@@ -4,11 +4,11 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "^1.2.18",
+    "@types/bun": "^1.2.19",
     "tsx": "^4.20.3"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.2"
   },
   "dependencies": {
     "groq-sdk": "^0.29.0",

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { $, file } from "bun";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from "fs";
 import path from "path";
 import { cpus } from "os";
 
@@ -14,6 +14,7 @@ interface ArcResults {
 const ARC_RESULTS_FILE = path.join("working", "arc_results.json");
 
 // Function to load existing results or initialize new ones
+// WIP - LETS ALWAYS START FRESH FOR TESTING
 function loadArcResults(): ArcResults {
   if (existsSync(ARC_RESULTS_FILE)) {
     try {
@@ -41,28 +42,42 @@ async function runSolver(
 ): Promise<{ filename: string; success: boolean; message?: string }> {
   const fullPath = path.join("data", "evaluation", `${filename}.json`);
   console.log(`✨ Processing ${fullPath}...`);
-  try {
-    const { exitCode, stderr, stdout } = await $`bun ./solver.ts ${fullPath}`;
-    if (exitCode !== 0) {
-      console.error(`❌ Solver failed for ${filename}: ${stderr.toString()}`);
-      // Give an error as the code IS NOT THROWING AN ERROR
-      process.exit(1); // return { filename, success: false, message: stderr.toString() };
-    }
-    console.log(`✅ Successfully processed ${filename}`);
-    return { filename, success: true, message: stdout.toString() };
-  } catch (error: any) {
-    console.error(
-      `💥 Error processing ${filename}: ${(error as Error).message}`
+
+  const { exitCode, stderr, stdout } =
+    await await $.nothrow()`bun ./solver.ts ${fullPath}`;
+  console.log("solver::", { exitCode, stderr, stdout });
+  // process.exit(5); // Force exit to avoid hanging
+
+  if (exitCode === 2 || exitCode === 3) {
+    console.log(
+      `Skipping ${filename} due to failed training or test solutions.`
     );
-    process.exit(1);
-    // return { filename, success: false, message: (error as Error).message };
+    return {
+      filename,
+      success: false,
+      message: "Skipped due to failed solutions",
+    };
+  } else if (exitCode !== 0) {
+    console.error(`❌ Solver failed for ${filename}: ${stderr.toString()}`);
+    // Give an error as the code IS NOT THROWING AN ERROR
+    process.exit(1); // return { filename, success: false, message: stderr.toString() };
   }
+  console.log(`✅ Successfully processed ${filename}`);
+  return { filename, success: true, message: stdout.toString() };
 }
 
 async function main() {
+  // delete ARC_RESULTS_FILE if it exists
+  if (existsSync(ARC_RESULTS_FILE)) {
+    console.log(`Resetting existing results file: ${ARC_RESULTS_FILE}`);
+    await rmSync(ARC_RESULTS_FILE, { force: true });
+  }
+
   const evaluationFilePath = path.join("data", "evaluation.txt");
   if (!existsSync(evaluationFilePath)) {
-    console.error(`Error: ${evaluationFilePath} not found.`);
+    console.error(
+      `Error: ${evaluationFilePath} not found. Please be sure to clone ARC-AGI-2's data folder here.`
+    );
     process.exit(1);
   }
 
@@ -93,85 +108,55 @@ async function main() {
   let processedCount = 0;
   let skippedCount = 0;
 
-  if (threads <= 1) {
-    // Sequential processing
-    for (const filename of filenames) {
-      const workingDirForFile = path.join("working", filename);
-      if (resumeMode && existsSync(workingDirForFile)) {
-        console.log(
-          `⏭️ Skipping ${filename} (already processed in resume mode).`
-        );
-        skippedCount++;
-        results.push({
-          filename,
-          success: true,
-          message: "Skipped (already processed)",
-        });
-        // Also update arcResults if skipped, assuming skipped means success
-        if (!arcResults.success_dir.includes(filename)) {
-          arcResults.successes++;
-          arcResults.success_dir.push(filename);
-        }
-        saveArcResults(arcResults);
-        continue;
-      }
-      const result = await runSolver(filename);
-      results.push(result);
-      processedCount++;
+  // Unified processing (sequential if threads === 1, parallel otherwise)
+  const toProcess: string[] = [];
+  for (const filename of filenames) {
+    // const workingDirForFile = path.join("working", filename);
+    // if (resumeMode && existsSync(workingDirForFile)) {
+    //   console.log(
+    //     `⏭️ Skipping ${filename} (already processed in resume mode).`
+    //   );
+    //   skippedCount++;
+    //   results.push({
+    //     filename,
+    //     success: true,
+    //     message: "Skipped (already processed)",
+    //   });
+    //   // Also update arcResults if skipped, assuming skipped means success
+    //   if (!arcResults.success_dir.includes(filename)) {
+    //     arcResults.successes++;
+    //     arcResults.success_dir.push(filename);
+    //   }
+    //   saveArcResults(arcResults);
+    //   continue;
+    // }
+    toProcess.push(filename);
+  }
 
+  // Process in batches (batch size = threads)
+  for (let i = 0; i < toProcess.length; i += threads) {
+    console.log(
+      `\nProcessing batch ${Math.floor(i / threads) + 1} of ${Math.ceil(
+        toProcess.length / threads
+      )} with threads ${threads}...`
+    );
+    const arcResults = loadArcResults();
+    const batch = toProcess.slice(i, i + threads);
+    const batchPromises = batch.map(runSolver);
+    const batchResults = await Promise.all(batchPromises);
+    results.push(...batchResults);
+    processedCount += batchResults.length;
+
+    batchResults.forEach((result) => {
       if (result.success) {
         arcResults.successes++;
-        arcResults.success_dir.push(filename);
+        arcResults.success_dir.push(result.filename);
       } else {
         arcResults.fails++;
-        arcResults.fail_dir.push(filename);
+        arcResults.fail_dir.push(result.filename);
       }
-      saveArcResults(arcResults); // Save after each run
-    }
-  } else {
-    // Parallel processing
-    const allPromises: Promise<any>[] = [];
-    for (const filename of filenames) {
-      const workingDirForFile = path.join("working", filename);
-      if (resumeMode && existsSync(workingDirForFile)) {
-        console.log(
-          `⏭️ Skipping ${filename} (already processed in resume mode).`
-        );
-        skippedCount++;
-        results.push({
-          filename,
-          success: true,
-          message: "Skipped (already processed)",
-        });
-        // Also update arcResults if skipped, assuming skipped means success
-        if (!arcResults.success_dir.includes(filename)) {
-          arcResults.successes++;
-          arcResults.success_dir.push(filename);
-        }
-        continue;
-      }
-      allPromises.push(runSolver(filename));
-    }
-
-    // Process in batches
-    for (let i = 0; i < allPromises.length; i += threads) {
-      const batch = allPromises.slice(i, i + threads);
-      const batchResults = await Promise.all(batch);
-      results.push(...batchResults);
-      processedCount += batchResults.length;
-
-      // Update arcResults for the batch
-      batchResults.forEach((result) => {
-        if (result.success) {
-          arcResults.successes++;
-          arcResults.success_dir.push(result.filename);
-        } else {
-          arcResults.fails++;
-          arcResults.fail_dir.push(result.filename);
-        }
-      });
-      saveArcResults(arcResults); // Save after each batch
-    }
+    });
+    saveArcResults(arcResults); // Save after each batch
   }
 
   console.log(`\n--- Evaluation Summary ---`);
