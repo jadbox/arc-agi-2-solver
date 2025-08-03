@@ -13,7 +13,7 @@ function formatGrid(grid) {
 async function generateAsciiMap() {
   // Define the default input and output file names
   const defaultInputFileName = "data.json";
-  const workingDir = "working";
+  const defaultWorkingDir = "working";
   const trainingFileName = "training.txt";
   const solutionFileName = "solution.txt";
   const testFileName = "test.txt";
@@ -21,21 +21,19 @@ async function generateAsciiMap() {
   // Get command-line arguments.
   // process.argv[0] is 'bun'
   // process.argv[1] is the script path (e.g., 'ascii-mapper.js')
-  // process.argv[2] would be the first argument passed by the user.
+  // process.argv[2] would be the input file name
+  // process.argv[3] would be the working directory
   const args = process.argv.slice(2);
 
   // Determine the input file name: use the first argument if provided, otherwise use the default.
   const inputFileName = args[0] || defaultInputFileName;
+  const workingDir = args[1] || defaultWorkingDir;
 
   try {
-    // Clear and create working directory
+    // Create working directory if it doesn't exist
     const workingDirPath = path.join(process.cwd(), workingDir);
-    // if (existsSync(workingDirPath)) {
-    //   rmSync(workingDirPath, { recursive: true, force: true });
-    //   console.log(`Cleared existing ${workingDir}/ directory`);
-    // }
     mkdirSync(workingDirPath, { recursive: true });
-    // console.log(`Created ${workingDir}/ directory`);
+    console.log(`Ensured working directory exists: ${workingDirPath}`);
 
     // Construct the full path to the input file
     const inputFilePath = path.join(process.cwd(), inputFileName);
@@ -99,17 +97,17 @@ async function generateAsciiMap() {
 
     // Write all three files to working directory
     const trainingFilePath = path.join(workingDirPath, trainingFileName);
-    const solutionFilePath = path.join(workingDirPath, solutionFileName);
-    const testFilePath = path.join(workingDirPath, testFileName);
+    // const solutionFilePath = path.join(workingDirPath, solutionFileName);
+    // const testFilePath = path.join(workingDirPath, testFileName);
 
     writeFileSync(trainingFilePath, trainingContent, "utf8");
-    writeFileSync(solutionFilePath, solutionContent, "utf8");
-    writeFileSync(testFilePath, testContent, "utf8");
+    // writeFileSync(solutionFilePath, solutionContent, "utf8");
+    // writeFileSync(testFilePath, testContent, "utf8");
 
     console.log(`Successfully generated three files from ${inputFileName}:`);
     console.log(`- ${workingDir}/${trainingFileName}: Training data only`);
-    console.log(`- ${workingDir}/${solutionFileName}: Test input/output pairs`);
-    console.log(`- ${workingDir}/${testFileName}: Test inputs only`);
+    // console.log(`- ${workingDir}/${solutionFileName}: Test input/output pairs`);
+    // console.log(`- ${workingDir}/${testFileName}: Test inputs only`);
   } catch (error) {
     console.error(`Error generating ASCII map: ${error.message}`);
     // Provide more specific error messages for common issues

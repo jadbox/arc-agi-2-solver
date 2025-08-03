@@ -1,4 +1,4 @@
-# JAD: JSON ARC Dataset Solver
+# JAD: Jonathan's ARC Dataset Solver
 
 This project is a command-line tool for solving ARC (Abstraction and Reasoning Corpus) puzzles provided in a JSON format. It analyzes training examples and attempts to find a solution for the test input.
 
@@ -10,8 +10,15 @@ This project employs two main strategies:
 
 To solve a puzzle, run the `solver.js` script from your terminal. You need to provide a sample JSON file containing the puzzle data.
 
+Step 1: copy the /data/ directory from ARC-PRIZE-02 into the root of this project.
+
+To run the full arc evaluation on all puzzles, use the following command:
 ```bash
-bun run solver.js
+bun run arc.ts data/evaluation.txt
+```
+OR to run a specific puzzle, use:
+```bash
+bun run solver.ts data/evaluation/ff001.json
 ```
 
 The script will then:
@@ -28,6 +35,12 @@ The project is organized into the following files and directories:
 -   `analysis.js`: The core logic for analyzing the puzzle and finding a solution.
 -   `asciimap.js`: A script for generating an ASCII representation of the puzzle.
 -   `working/`: A directory for storing intermediate files, such as the ASCII map and the final solution.
+
+Output files are structured as follows:
+-   working/arc_results.json: A summary of the results for all puzzles processed.
+-   working/[[challenge-id]]/solution.ts: The final solution code for the puzzle.
+-   working/[[challenge-id]]/analysis.txt: A text representation of the solution analysis
+-   working/[[challenge-id]]/solution_output.json: results of running the solution code against the test data
 
 ## Libraries
 

@@ -16,13 +16,18 @@ const max_tokens = 16000;
 // "https://api.cerebras.ai/v1"
 const baseURL = "https://api.cerebras.ai/v1"; // or use your preferred OpenAI API endpoint
 const apiKey = process.env.CEREBRAS_API_KEY; // Use OpenAI API key
-const MODEL = "qwen-3-235b-a22b-instruct-2507"; //"qwen-3-235b-a22b"; // qwen-3-235b-a22b-thinking-2507
+// "qwen-3-235b-a22b-thinking-2507"; // "qwen-3-coder-480b"; // "qwen-3-235b-a22b-instruct-2507";
+// "qwen-3-235b-a22b";
+const MODEL = "qwen-3-235b-a22b-instruct-2507";
+const MODEL_CODER = "qwen-3-coder-480b";
 
 // gemini
 // const baseURL = "https://generativelanguage.googleapis.com/v1beta/openai/";
 // const MODEL = "gemini-2.5-flash";
+// const MODEL_CODER = MODEL;
 // const apiKey = process.env.GEMINI_API_KEY; // Use OpenAI API key if Gemini key is not set
 
+// OPENROUTER
 // const OR_ROUTER_MODELS = {
 //   K2: "moonshotai/kimi-k2", // cant do sample2
 //   Qwen3Coder: "qwen/qwen3-coder",
@@ -39,6 +44,7 @@ const MODEL = "qwen-3-235b-a22b-instruct-2507"; //"qwen-3-235b-a22b"; // qwen-3-
 // const MODEL =
 //   OR_ROUTER_MODELS[process.env.aimodel as RouterModelKey] ||
 //   OR_ROUTER_MODELS.Qwen3Think;
+// const MODEL_CODER = MODEL;
 
 if (!MODEL) {
   throw new Error("No model");
@@ -69,30 +75,32 @@ const client = new OpenAI({
 
 export async function callOpenAI(
   prompt: string,
-  outputJSON: boolean = false,
-  outputFilePath: string = ""
+  options: {
+    outputJSON?: boolean;
+    outputFilePath?: string;
+    code?: boolean;
+  } = {}
 ) {
-  return callOpenAIStream(prompt, outputJSON, outputFilePath);
+  return callOpenAIStream(prompt, options);
 }
 
 // Helper function to call openai with prompt and return response
 // export async function callOpenAISync(
 //   prompt: string,
-//   outputJSON: boolean = false,
-//   outputFilePath: string = ""
+//   options: { outputJSON?: boolean; outputFilePath?: string; code?: boolean } = {}
 // ) {
 //   console.log(`🤖 Starting OpenAI request with ${MODEL} at ${baseURL}...`);
 
 //   try {
 //     const response = await client.chat.completions.create({
-//       model: MODEL,
+//       model: options.code ? MODEL_CODER : MODEL,
 //       messages: [{ role: "user", content: prompt }],
 //       max_tokens: max_tokens,
 //       temperature: 0.7,
 //       top_p: 0.8,
 //       // repetition_penalty: 1.05,
 //       // response_format: {
-//       //   type: outputJSON ? "json_object" : "text",
+//       //   type: options.outputJSON ? "json_object" : "text",
 //       // },
 //     });
 
@@ -107,9 +115,9 @@ export async function callOpenAI(
 
 //     console.log(`✅ Response received (${trimmedResponse.length} characters)`);
 
-//     if (outputFilePath) {
-//       writeFileSync(outputFilePath, trimmedResponse, "utf8");
-//       console.log(`✅ Output written to ${outputFilePath}`);
+//     if (options.outputFilePath) {
+//       writeFileSync(options.outputFilePath, trimmedResponse, "utf8");
+//       console.log(`✅ Output written to ${options.outputFilePath}`);
 //     }
 
 //     return trimmedResponse;
@@ -122,18 +130,24 @@ export async function callOpenAI(
 // Helper function to call openai with prompt and return response
 export async function callOpenAIStream(
   prompt: string,
-  outputJSON: boolean = false,
-  outputFilePath: string = ""
+  options: {
+    outputJSON?: boolean;
+    outputFilePath?: string;
+    code?: boolean;
+  } = {}
 ) {
-  console.log(`🤖 Starting OpenAI request with ${MODEL} at ${baseURL}...`);
+  const { outputJSON = false, outputFilePath = "", code = false } = options;
+  const modelToUse = code ? MODEL_CODER : MODEL;
+
+  console.log(`🤖 Starting OpenAI request with ${modelToUse} at ${baseURL}...`);
 
   try {
     const stream = await client.chat.completions.create({
-      model: MODEL,
+      model: modelToUse,
       messages: [{ role: "user", content: prompt }],
       max_tokens: max_tokens,
-      temperature: 0.7, // 0.6, // 0.1
-      top_p: 0.8, // 0.8, // 0.5
+      temperature: 0.1, // 0.6, // 0.1
+      top_p: 0.5, // 0.8, // 0.5
       // min_p: 0,
       // top_k: 20,
       // repetition_penalty: 1.05,
@@ -182,6 +196,17 @@ export async function callOpenAIStream(
     }
 
     fullResponse = fullResponse.trim();
+
+    if (
+      fullResponse.indexOf("I cannot solve it.") !== -1 ||
+      fullResponse.indexOf("giving up") !== -1
+    ) {
+      console.warn(
+        "⚠️ OpenAI response indicates inability to solve the problem.",
+        fullResponse
+      );
+      process.exit(1);
+    }
 
     if (outputFilePath) {
       writeFileSync(outputFilePath, fullResponse, "utf8");
