@@ -21,7 +21,7 @@ Copy the `data/` directory from the ARC-AGI-02 repository (https://github.com/ar
 
 You can run the full evaluation across all puzzles or target a specific puzzle:
 
-*   **Run Full ARC Evaluation**: To process all puzzles listed in `data/evaluation.txt`:
+*   **Run FULL ARC Evaluation**: To process all puzzles listed in `data/evaluation.txt`:
     ```bash
     bun run arc.ts data/evaluation.txt
     ```
@@ -44,38 +44,54 @@ Upon execution, the script will perform the following actions:
 
 This framework supports various AI models for solving ARC puzzles. You can switch between models by setting specific environment variables.
 
-The `lib/openai.ts` file configures the AI model used by the solver. The following models are supported:
+The `lib/openai.ts` file configures the AI model used by the solver. The following model providers are supported:
 
 *   **Cerebras**:
     *   Set `CEREBRAS_API_KEY` to your Cerebras API key.
+    *   To use Cerebras, set `aimodel="Cerebras"`. This is the default if `aimodel` is not set.
     *   The default model is `qwen-3-235b-a22b-instruct-2507`.
 
 *   **Anthropic**:
     *   Set `ANTHROPIC_API_KEY` to your Anthropic API key.
-    *   The default model is `claude-sonnet-4-20250514`.
+    *   To use Anthropic, set `aimodel="Anthropic"` for `claude-sonnet-4-20250514`.
 
 *   **Deepseek**:
     *   Set `DEEPSEEK_API_KEY` to your Deepseek API key.
-    *   The default model is `deepseek-chat`.
+    *   To use Deepseek, set `aimodel="Deepseek"` for `deepseek-chat`.
 
 *   **Gemini**:
     *   Set `GEMINI_API_KEY` to your Gemini API key.
-    *   The default model is `gemini-2.5-flash`.
+    *   To use Gemini, set `aimodel="Gemini"` for `gemini-2.5-flash`
 
 *   **OpenRouter**:
     *   Set `OPENROUTER_API_KEY` to your OpenRouter API key.
-    *   You can specify the model by setting the `aimodel` environment variable to one of the keys defined in `OR_ROUTER_MODELS` within `lib/openai.ts` (e.g., `K2`, `Qwen3Coder`, `Qwen3`, `Qwen3Think`, `glm`, `glm_air`, `chatgpt`, `Qwen3Nitro`). If `aimodel` is not set, it defaults to `Qwen3Think`.
+    *   To use OpenRouter, set `aimodel="OpenRouter:[MODEL_KEY]"`, where `[MODEL_KEY]` is one of the keys defined in `OR_ROUTER_MODELS` within `lib/openai.ts` (e.g., `K2`, `Qwen3Coder`, `Qwen3`, `Qwen3Think`, `glm`, `glm_air`, `chatgpt`, `Qwen3Nitro`). If no `[MODEL_KEY]` is specified (i.e., `aimodel="OpenRouter"`), it defaults to `Qwen3Think`.
 
 **Example: Setting Environment Variables (Bash/Zsh)**
 
 ```bash
-# For Cerebras
+# To use Cerebras AI (default if aimodel is not set)
 export CEREBRAS_API_KEY="your_cerebras_api_key_here"
 bun run solver.ts data/evaluation/ff001.json
 
-# For OpenRouter with a specific model
+# To explicitly use Anthropic
+export ANTHROPIC_API_KEY="your_anthropic_api_key_here"
+export aimodel="Anthropic"
+bun run solver.ts data/evaluation/ff001.json
+
+# To explicitly use Deepseek
+export DEEPSEEK_API_KEY="your_deepseek_api_key_here"
+export aimodel="Deepseek"
+bun run solver.ts data/evaluation/ff001.json
+
+# To explicitly use Gemini
+export GEMINI_API_KEY="your_gemini_api_key_here"
+export aimodel="Gemini"
+bun run solver.ts data/evaluation/ff001.json
+
+# To use OpenRouter with a specific model (e.g., Qwen3Coder)
 export OPENROUTER_API_KEY="your_openrouter_api_key_here"
-export aimodel="Qwen3Coder"
+export aimodel="OpenRouter:Qwen3Coder"
 bun run solver.ts data/evaluation/ff001.json
 ```
 

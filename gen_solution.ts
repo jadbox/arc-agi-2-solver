@@ -1,6 +1,4 @@
 #!/usr/bin/env bun
-import { $ } from "bun";
-import { makePrompt } from "./gen_prompt.ts";
 import { writeFileSync, readFileSync, existsSync } from "fs";
 import path from "path";
 import { callOpenAI } from "./lib/openai";
@@ -99,4 +97,63 @@ export async function main() {
 
 if (import.meta.main) {
   main();
+}
+
+/**
+ * Generates a prompt for the OpenAI API based on the analysis and training data.
+ * Reads the analysis from 'analysis.txt', the template from 'solution_example.ts',
+ * and the training data from 'training.txt'.
+ * @param workingDir The directory where the analysis and training files are located.
+ * @returns A formatted prompt string for OpenAI.
+ */
+async function makePrompt(workingDir: string = "working") {
+  const analysis = readFileSync(
+    path.join(process.cwd(), workingDir, "analysis.txt"),
+    "utf-8"
+  ).split("FINAL>")[1];
+  if (!analysis) {
+    throw new Error("No analysis found in analysis.txt");
+  }
+
+  const template = readFileSync(
+    path.join(process.cwd(), "solution_example.ts"),
+    "utf-8"
+  );
+
+  const training = readFileSync(
+    path.join(process.cwd(), workingDir, "training.txt"),
+    "utf-8"
+  );
+
+  // Read old code if it exists
+  let old_code = "";
+  const oldCodePath = path.join(workingDir, "solution.ts");
+  if (existsSync(oldCodePath)) {
+    old_code = readFileSync(oldCodePath, "utf-8");
+  }
+
+  let oldResults = "";
+  const oldResultsPath = path.join(workingDir, "training_run.txt");
+  if (existsSync(oldResultsPath)) {
+    oldResults = readFileSync(oldResultsPath, "utf-8");
+  }
+
+  const prompt = `
+    Based on the following analysis:
+    ---
+    ${analysis}
+    ---
+    Generate a TypeScript solution file named 'solution.ts' that implements the logic described to map input number[] .
+    Use this template as a starting point:
+    ---
+    ${old_code || template}
+    ---
+    The generated code should be a single TypeScript file. Return final solution.ts after a <SOLUTION> marker.
+    <DATA>
+    ${training}
+    </DATA>
+    ${oldResults ? `\n\nTemplate Results:\n\n${oldResults}` : ""}
+  `;
+
+  return prompt;
 }

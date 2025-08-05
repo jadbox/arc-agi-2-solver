@@ -1,78 +1,133 @@
-import { readFileSync, writeFileSync } from "fs";
-import path from "path";
-import { $ } from "bun";
+import { writeFileSync } from "fs";
 import OpenAI from "openai";
 
+// Maximum tokens for the AI model response.
 const max_tokens = 16000;
 
-//const baseURL = "https://api.deepseek.com/v1"; // or use your preferred OpenAI API endpoint
-// const apiKey = process.env.DEEPSEEK_API_KEY;
-// const MODEL = "deepseek-chat"; // "deepseek-reasoner",
+// --- AI Model Configuration ---
+// This section defines the base URL, API key, and model names for various AI providers.
+// Uncomment and configure the desired provider.
 
-// const baseURL = "https://api.anthropic.com/v1/";
-// const apiKey = process.env.ANTHROPIC_API_KEY;
-// const MODEL = "claude-sonnet-4-20250514"; // or use your preferred OpenAI
+// --- AI Model Configuration ---
+// This section defines the base URL, API key, and model names for various AI providers.
+// The active configuration is determined by the `aimodel` environment variable.
 
-// "https://api.cerebras.ai/v1"
-const baseURL = "https://api.cerebras.ai/v1"; // or use your preferred OpenAI API endpoint
-const apiKey = process.env.CEREBRAS_API_KEY; // Use OpenAI API key
-// "qwen-3-235b-a22b-thinking-2507"; // "qwen-3-coder-480b"; // "qwen-3-235b-a22b-instruct-2507";
-// "qwen-3-235b-a22b";
-const MODEL = "qwen-3-235b-a22b-instruct-2507";
-const MODEL_CODER = "qwen-3-coder-480b";
+let baseURL: string;
+let apiKey: string | undefined;
+let MODEL: string;
+let MODEL_CODER: string;
 
-// gemini
-// const baseURL = "https://generativelanguage.googleapis.com/v1beta/openai/";
-// const MODEL = "gemini-2.5-flash";
-// const MODEL_CODER = MODEL;
-// const apiKey = process.env.GEMINI_API_KEY; // Use OpenAI API key if Gemini key is not set
+const OR_ROUTER_MODELS = {
+  K2: "moonshotai/kimi-k2",
+  Qwen3Coder: "qwen/qwen3-coder",
+  Qwen3: "qwen/qwen3-235b-a22b-07-25",
+  Qwen3Think: "qwen/qwen3-235b-a22b-thinking-2507:nitro",
+  glm: "z-ai/glm-4.5",
+  glm_air: "z-ai/glm-4.5-air",
+  chatgpt: "openai/chatgpt-4o-latest",
+  Qwen3Nitro: "qwen/qwen3-235b-a22b-2507:nitro",
+};
+type RouterModelKey = keyof typeof OR_ROUTER_MODELS;
 
-// OPENROUTER
-// const OR_ROUTER_MODELS = {
-//   K2: "moonshotai/kimi-k2", // cant do sample2
-//   Qwen3Coder: "qwen/qwen3-coder",
-//   Qwen3: "qwen/qwen3-235b-a22b-07-25",
-//   Qwen3Think: "qwen/qwen3-235b-a22b-thinking-2507:nitro",
-//   glm: "z-ai/glm-4.5",
-//   glm_air: "z-ai/glm-4.5-air",
-//   chatgpt: "openai/chatgpt-4o-latest",
-//   Qwen3Nitro: "qwen/qwen3-235b-a22b-2507:nitro",
-// };
-// type RouterModelKey = keyof typeof OR_ROUTER_MODELS;
-// const baseURL = "https://openrouter.ai/api/v1"; // or use your preferred OpenAI API endpoint
-// const apiKey = process.env.OPENROUTER_API_KEY;
-// const MODEL =
-//   OR_ROUTER_MODELS[process.env.aimodel as RouterModelKey] ||
-//   OR_ROUTER_MODELS.Qwen3Think;
-// const MODEL_CODER = MODEL;
-
-if (!MODEL) {
-  throw new Error("No model");
+const model = process.env.aimodel || "Cerebras";
+switch (model) {
+  case "Cerebras":
+    baseURL = "https://api.cerebras.ai/v1";
+    apiKey = process.env.CEREBRAS_API_KEY;
+    MODEL = "qwen-3-235b-a22b-instruct-2507";
+    MODEL_CODER = "qwen-3-coder-480b";
+    break;
+  case "Anthropic":
+    baseURL = "https://api.anthropic.com/v1/";
+    apiKey = process.env.ANTHROPIC_API_KEY;
+    MODEL = "claude-sonnet-4-20250514";
+    MODEL_CODER = MODEL; // Assuming coder model is same or not applicable
+    break;
+  case "Deepseek":
+    baseURL = "https://api.deepseek.com/v1";
+    apiKey = process.env.DEEPSEEK_API_KEY;
+    MODEL = "deepseek-chat";
+    MODEL_CODER = "deepseek-coder"; // Assuming a coder model exists
+    break;
+  case "Gemini":
+    baseURL = "https://generativelanguage.googleapis.com/v1beta/openai/";
+    MODEL = "gemini-2.5-flash";
+    MODEL_CODER = MODEL;
+    apiKey = process.env.GEMINI_API_KEY;
+    break;
+  case "OpenRouter":
+  case "OpenRouter:K2":
+  case "OpenRouter:Qwen3Coder":
+  case "OpenRouter:Qwen3":
+  case "OpenRouter:Qwen3Think":
+  case "OpenRouter:glm":
+  case "OpenRouter:glm_air":
+  case "OpenRouter:chatgpt":
+  case "OpenRouter:Qwen3Nitro":
+    baseURL = "https://openrouter.ai/api/v1";
+    apiKey = process.env.OPENROUTER_API_KEY;
+    const openRouterModelKey =
+      process.env.aimodel?.split(":")[1] || "Qwen3Think";
+    MODEL =
+      OR_ROUTER_MODELS[openRouterModelKey as RouterModelKey] ||
+      OR_ROUTER_MODELS.Qwen3Think;
+    MODEL_CODER = MODEL; // OpenRouter often uses the same model for coding tasks unless specified
+    break;
+  default:
+    throw new Error(
+      `Unsupported AI model: ${model}. Supported models are: Cerebras, Anthropic, Deepseek, Gemini, OpenRouter.`
+    );
+    break;
 }
 
+// Ensure a model is selected.
+if (!MODEL) {
+  throw new Error(
+    "No AI model configured. Please set the 'aimodel' environment variable or configure a default."
+  );
+}
+
+// Validate API key presence.
+if (!apiKey) {
+  throw new Error(
+    `API key for the selected model (${
+      process.env.aimodel || "Cerebras"
+    }) is not set. Please set the appropriate environment variable.`
+  );
+}
+
+// Initialize the OpenAI client with the configured base URL and API key.
+const client = new OpenAI({
+  baseURL: baseURL,
+  apiKey: apiKey,
+});
+
+// Parameters specific to Cerebras models (these might be moved into the switch if they vary per model)
 const CEREBRAS_PARAMS = {
-  tempuerature: 0.6, // 0.1
-  top_p: 0.8, // 0.5
+  temperature: 0.6,
+  top_p: 0.8,
   provider: {
-    only: ["cerebras"], // or "openai" for OpenAI models
+    only: ["cerebras"],
   },
 };
 
-const GEMIN_PARAMS = {
-  tempuerature: 0.1,
+// Parameters specific to Gemini models (these might be moved into the switch if they vary per model)
+const GEMINI_PARAMS = {
+  temperature: 0.1,
   top_p: 0.5,
 };
 
-if (!apiKey) {
-  throw new Error(
-    "OPENROUTER_API_KEY environment variable is not set. Please set it to your OpenRouter API key."
-  );
-}
-const client = new OpenAI({
-  baseURL: baseURL, // "https://generativelanguage.googleapis.com/v1beta/openai/",
-  apiKey: apiKey, // Ensure you have set your OpenAI API key in the environment variables
-});
-
+/**
+ * Calls the OpenAI API with a given prompt and returns the response.
+ * This function acts as a wrapper, internally calling `callOpenAIStream`.
+ *
+ * @param prompt The text prompt to send to the AI model.
+ * @param options Configuration options for the API call.
+ * @param options.outputJSON If true, requests a JSON object response.
+ * @param options.outputFilePath If provided, the response will be written to this file.
+ * @param options.code If true, uses the `MODEL_CODER` for code-specific tasks.
+ * @returns A promise that resolves to the AI model's response as a string.
+ */
 export async function callOpenAI(
   prompt: string,
   options: {
@@ -84,50 +139,18 @@ export async function callOpenAI(
   return callOpenAIStream(prompt, options);
 }
 
-// Helper function to call openai with prompt and return response
-// export async function callOpenAISync(
-//   prompt: string,
-//   options: { outputJSON?: boolean; outputFilePath?: string; code?: boolean } = {}
-// ) {
-//   console.log(`🤖 Starting OpenAI request with ${MODEL} at ${baseURL}...`);
-
-//   try {
-//     const response = await client.chat.completions.create({
-//       model: options.code ? MODEL_CODER : MODEL,
-//       messages: [{ role: "user", content: prompt }],
-//       max_tokens: max_tokens,
-//       temperature: 0.7,
-//       top_p: 0.8,
-//       // repetition_penalty: 1.05,
-//       // response_format: {
-//       //   type: options.outputJSON ? "json_object" : "text",
-//       // },
-//     });
-
-//     const fullResponse = response.choices[0]?.message?.content;
-
-//     if (!fullResponse) {
-//       console.warn("Response:", response);
-//       throw new Error("No response received from OpenAI.");
-//     }
-
-//     const trimmedResponse = fullResponse.trim();
-
-//     console.log(`✅ Response received (${trimmedResponse.length} characters)`);
-
-//     if (options.outputFilePath) {
-//       writeFileSync(options.outputFilePath, trimmedResponse, "utf8");
-//       console.log(`✅ Output written to ${options.outputFilePath}`);
-//     }
-
-//     return trimmedResponse;
-//   } catch (error) {
-//     console.error("❌ Error calling OpenAI:", error);
-//     throw error;
-//   }
-// }
-
-// Helper function to call openai with prompt and return response
+/**
+ * Calls the OpenAI API with a given prompt and streams the response.
+ * This function handles the streaming logic, logging, and error handling.
+ *
+ * @param prompt The text prompt to send to the AI model.
+ * @param options Configuration options for the API call.
+ * @param options.outputJSON If true, requests a JSON object response.
+ * @param options.outputFilePath If provided, the response will be written to this file.
+ * @param options.code If true, uses the `MODEL_CODER` for code-specific tasks.
+ * @returns A promise that resolves to the AI model's complete response as a string.
+ * @throws Error if no response is received or if the AI indicates it cannot solve the problem.
+ */
 export async function callOpenAIStream(
   prompt: string,
   options: {
@@ -146,11 +169,8 @@ export async function callOpenAIStream(
       model: modelToUse,
       messages: [{ role: "user", content: prompt }],
       max_tokens: max_tokens,
-      temperature: 0.1, // 0.6, // 0.1
-      top_p: 0.5, // 0.8, // 0.5
-      // min_p: 0,
-      // top_k: 20,
-      // repetition_penalty: 1.05,
+      temperature: 0.1,
+      top_p: 0.5,
       stream: true,
       response_format: {
         type: outputJSON ? "json_object" : "text",
@@ -167,7 +187,6 @@ export async function callOpenAIStream(
 
     let isReasoning = false;
     for await (const chunk of stream as any) {
-      // console.log(`🔄 Received chunk`, chunk.choices[0]);
       const reasoning = (chunk.choices[0]?.delta as any)?.reasoning || "";
       if (reasoning) {
         if (!isReasoning) {
@@ -184,7 +203,7 @@ export async function callOpenAIStream(
           console.log("💬 Final response started:");
         }
         fullResponse += content;
-        process.stdout.write(content); // stream to console
+        process.stdout.write(content);
         chunkCount++;
       }
     }
@@ -216,7 +235,6 @@ export async function callOpenAIStream(
     return fullResponse;
   } catch (error) {
     console.error("❌ Error calling OpenAI:", error);
-    // Fallback to a simpler, non-streaming call in case of error
     throw error;
   }
 }
