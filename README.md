@@ -5,6 +5,8 @@ This project is a robust TypeScript framework designed to solve ARC (Abstraction
 
 ## Core Strategies
 
+<img width="362" alt="arc-agi-2-unsolved-1" src="https://github.com/user-attachments/assets/3302305e-866c-40c2-af4b-6537e4856cc8" />
+
 This framework employs advanced strategies to tackle ARC puzzles:
 
 1.  **ASCII Map Generation**: Visualizes the puzzle's structure and relationships by generating an ASCII representation of the input and output grids. This aids in understanding spatial patterns and transformations.
