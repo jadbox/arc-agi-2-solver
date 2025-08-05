@@ -1,4 +1,4 @@
-# ARC-AGI-2 TypeScript Problem Solver
+# ARC-AGI-2 Solver Framework in TypeScript and Bun <3
 <img width="362" alt="Screenshot 2025-08-05 134004" src="https://github.com/user-attachments/assets/4355fc42-e75b-4bd0-9b21-798d91be740f" />
 
 This project is a robust TypeScript framework designed to solve ARC (Abstraction and Reasoning Corpus) puzzles, specifically those from the ARC-AGI-2 dataset. It provides a command-line interface (CLI) tool that analyzes training examples from JSON-formatted puzzles and attempts to generate a solution for the corresponding test input. The framework supports integration with multiple different AI models, allowing for flexible and powerful problem-solving approaches.
