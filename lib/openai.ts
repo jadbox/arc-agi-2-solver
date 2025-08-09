@@ -31,6 +31,12 @@ type RouterModelKey = keyof typeof OR_ROUTER_MODELS;
 
 const model = process.env.aimodel || "Cerebras";
 switch (model) {
+  case "OpenAI":
+    baseURL = "https://api.openai.com/v1";
+    apiKey = process.env.OPENAI_API_KEY;
+    MODEL = "gpt-5";
+    MODEL_CODER = MODEL;
+    break;
   case "Cerebras":
     baseURL = "https://api.cerebras.ai/v1";
     apiKey = process.env.CEREBRAS_API_KEY;
@@ -168,9 +174,10 @@ export async function callOpenAIStream(
     const stream = await client.chat.completions.create({
       model: modelToUse,
       messages: [{ role: "user", content: prompt }],
-      max_tokens: max_tokens,
+      max_completion_tokens: max_tokens,
       temperature: 0.1,
       top_p: 0.5,
+      // verbosity: "low", // gpt5
       stream: true,
       response_format: {
         type: outputJSON ? "json_object" : "text",
