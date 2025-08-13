@@ -29,101 +29,81 @@ async function generateAsciiMap() {
   const inputFileName = args[0] || defaultInputFileName;
   const workingDir = args[1] || defaultWorkingDir;
 
-  try {
-    // Create working directory if it doesn't exist
-    const workingDirPath = path.join(process.cwd(), workingDir);
-    mkdirSync(workingDirPath, { recursive: true });
-    console.log(`Ensured working directory exists: ${workingDirPath}`);
+  // Create working directory if it doesn't exist
+  const workingDirPath = path.join(process.cwd(), workingDir);
+  mkdirSync(workingDirPath, { recursive: true });
+  console.log(`Ensured working directory exists: ${workingDirPath}`);
 
-    // Construct the full path to the input file
-    const inputFilePath = path.join(process.cwd(), inputFileName);
+  // Construct the full path to the input file
+  const inputFilePath = path.join(process.cwd(), inputFileName);
 
-    console.log(`Attempting to read data from: ${inputFilePath}`);
+  console.log(`Attempting to read data from: ${inputFilePath}`);
 
-    // Read the JSON data file
-    const jsonData = readFileSync(inputFilePath, "utf8");
-    const data = JSON.parse(jsonData);
+  // Read the JSON data file
+  const jsonData = readFileSync(inputFilePath, "utf8");
+  const data = JSON.parse(jsonData);
 
-    // Handle the structure where data has 'train' and 'test' properties
-    let itemsToProcess = [];
+  // Handle the structure where data has 'train' and 'test' properties
+  let itemsToProcess = [];
 
-    if (data.train && Array.isArray(data.train)) {
-      itemsToProcess = itemsToProcess.concat(
-        data.train.map((item) => ({ ...item, type: "train" }))
-      );
-    }
-
-    if (data.test && Array.isArray(data.test)) {
-      itemsToProcess = itemsToProcess.concat(
-        data.test.map((item) => ({ ...item, type: "test" }))
-      );
-    }
-
-    // If data is directly an array (fallback for other formats)
-    if (Array.isArray(data)) {
-      itemsToProcess = data;
-    }
-
-    // Separate training and test items
-    const trainItems = itemsToProcess.filter((item) => item.type === "train");
-    const testItems = itemsToProcess.filter((item) => item.type === "test");
-
-    // Generate training.txt - only training data
-    let trainingContent = "";
-    trainItems.forEach((item, index) => {
-      const inputLabel = `<INPUT_${index + 1}>`;
-      const outputLabel = `<OUTPUT_${index + 1}>`;
-
-      trainingContent += `${inputLabel}:\n${formatGrid(item.input)}\n`;
-      trainingContent += `${outputLabel}:\n${formatGrid(item.output)}\n\n`;
-    });
-
-    // Generate solution.txt - test input/output pairs
-    let solutionContent = "";
-    testItems.forEach((item, index) => {
-      const inputLabel = `<INPUT_${index + 1}>`;
-      const outputLabel = `<OUTPUT_${index + 1}>`;
-
-      solutionContent += `${inputLabel}:\n${formatGrid(item.input)}\n`;
-      solutionContent += `${outputLabel}:\n${formatGrid(item.output)}\n\n`;
-    });
-
-    // Generate test.txt - only test inputs
-    let testContent = "";
-    testItems.forEach((item, index) => {
-      const inputLabel = `<INPUT_${index + 1}>`;
-      testContent += `${inputLabel}:\n${formatGrid(item.input)}\n\n`;
-    });
-
-    // Write all three files to working directory
-    const trainingFilePath = path.join(workingDirPath, trainingFileName);
-    // const solutionFilePath = path.join(workingDirPath, solutionFileName);
-    // const testFilePath = path.join(workingDirPath, testFileName);
-
-    writeFileSync(trainingFilePath, trainingContent, "utf8");
-    // writeFileSync(solutionFilePath, solutionContent, "utf8");
-    // writeFileSync(testFilePath, testContent, "utf8");
-
-    console.log(`Successfully generated three files from ${inputFileName}:`);
-    console.log(`- ${workingDir}/${trainingFileName}: Training data only`);
-    // console.log(`- ${workingDir}/${solutionFileName}: Test input/output pairs`);
-    // console.log(`- ${workingDir}/${testFileName}: Test inputs only`);
-  } catch (error) {
-    console.error(`Error generating ASCII map: ${error.message}`);
-    // Provide more specific error messages for common issues
-    if (error.code === "ENOENT") {
-      console.error(`Error: The input file '${inputFileName}' was not found.`);
-      console.error(
-        `Please ensure '${inputFileName}' exists in the current directory or provide the correct path.`
-      );
-    } else if (error instanceof SyntaxError) {
-      console.error(
-        `Error: The input file '${inputFileName}' contains invalid JSON.`
-      );
-      console.error(`Please check the JSON syntax.`);
-    }
-    console.error(error); // Log the full error for debugging
+  if (data.train && Array.isArray(data.train)) {
+    itemsToProcess = itemsToProcess.concat(
+      data.train.map((item) => ({ ...item, type: "train" }))
+    );
   }
+
+  if (data.test && Array.isArray(data.test)) {
+    itemsToProcess = itemsToProcess.concat(
+      data.test.map((item) => ({ ...item, type: "test" }))
+    );
+  }
+
+  // If data is directly an array (fallback for other formats)
+  if (Array.isArray(data)) {
+    itemsToProcess = data;
+  }
+
+  // Separate training and test items
+  const trainItems = itemsToProcess.filter((item) => item.type === "train");
+  const testItems = itemsToProcess.filter((item) => item.type === "test");
+
+  // Generate training.txt - only training data
+  let trainingContent = "";
+  trainItems.forEach((item, index) => {
+    const inputLabel = `<INPUT_${index + 1}>`;
+    const outputLabel = `<OUTPUT_${index + 1}>`;
+
+    trainingContent += `${inputLabel}:\n${formatGrid(item.input)}\n`;
+    trainingContent += `${outputLabel}:\n${formatGrid(item.output)}\n\n`;
+  });
+
+  // Generate solution.txt - test input/output pairs
+  let solutionContent = "";
+  testItems.forEach((item, index) => {
+    solutionContent += `<INPUT_${index + 1}>:\n${formatGrid(item.input)}\n`;
+    solutionContent += `<OUTPUT_${index + 1}>:\n${formatGrid(item.output)}\n`;
+  });
+
+  // Generate test.txt - only test inputs
+  let testContent = "";
+  testItems.forEach((item, index) => {
+    const inputLabel = `<INPUT_${index + 1}>`;
+    testContent += `${inputLabel}:\n${formatGrid(item.input)}\n\n`;
+  });
+
+  // Write all three files to working directory
+  const trainingFilePath = path.join(workingDirPath, trainingFileName);
+  // const solutionFilePath = path.join(workingDirPath, solutionFileName);
+  // const testFilePath = path.join(workingDirPath, testFileName);
+
+  writeFileSync(trainingFilePath, trainingContent, "utf8");
+  // writeFileSync(solutionFilePath, solutionContent, "utf8");
+  // writeFileSync(testFilePath, testContent, "utf8");
+
+  console.log(`Successfully generated three files from ${inputFileName}:`);
+  console.log(`- ${workingDir}/${trainingFileName}: Training data only`);
+  // console.log(`- ${workingDir}/${solutionFileName}: Test input/output pairs`);
+  // console.log(`- ${workingDir}/${testFileName}: Test inputs only`);
 }
 
 // Execute the function
